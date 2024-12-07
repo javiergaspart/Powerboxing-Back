@@ -1,5 +1,3 @@
-// src/models/PunchingBag.js
-
 const mongoose = require('mongoose');
 
 const punchingBagSchema = new mongoose.Schema({
@@ -16,6 +14,7 @@ const punchingBagSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  sensors: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Sensor' }], // Reference to Sensor model
 });
 
 const PunchingBag = mongoose.model('PunchingBag', punchingBagSchema);

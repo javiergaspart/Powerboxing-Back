@@ -1,5 +1,3 @@
-// src/models/Sensor.js
-
 const mongoose = require('mongoose');
 
 const sensorSchema = new mongoose.Schema({
@@ -16,11 +14,14 @@ const sensorSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
-  lastUpdated: {
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+  },
+  createdAt: {
     type: Date,
     default: Date.now,
   },
 });
 
-const Sensor = mongoose.model('Sensor', sensorSchema);
-module.exports = Sensor;
+module.exports = mongoose.model('Sensor', sensorSchema);
