@@ -4,16 +4,20 @@ const express = require('express');
 const router = express.Router();
 const sessionController = require('../controllers/sessionController');
 
-// Route to create a new session
-router.post('/create', sessionController.createSession);
+// This route will create a new session with the provided session details.
+router.post('/reserve-or-create', sessionController.createorReserveSession);
 
-// Route to fetch all sessions
+// This route will retrieve all the sessions from the database.
 router.get('/', sessionController.getSessions);
 
-// Route to fetch upcoming sessions for a specific location
+// This route will retrieve upcoming sessions filtered by the provided location.
 router.get('/upcoming', sessionController.getUpcomingSessions);
 
-// Route to fetch previous sessions for a specific user
+// This route will retrieve previous sessions attended by the user, based on their user ID.
 router.get('/previous', sessionController.getPreviousSessions);
+
+// This route checks if there are available slots for a specific session.
+router.get('/session/:sessionId/availability', sessionController.checkSessionAvailability);
+
 
 module.exports = router;

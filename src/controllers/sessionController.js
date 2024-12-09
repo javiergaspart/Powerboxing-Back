@@ -1,16 +1,43 @@
 const sessionService = require('../services/sessionService');
 
 // Create a new session
-const createSession = async (req, res) => {
+const createorReserveSession = async (req, res) => {
   try {
-    const session = await sessionService.createSession(req.body);
-    res.status(201).json({
-      success: true,
-      message: 'Session created successfully',
-      data: session,
-    });
+    // Log the incoming request body
+    console.log('Request Body:', req.body);
+
+    // Check if the body is properly structured
+    if (!req.body) {
+      console.log('Request body is empty!');
+      return res.status(400).json({
+        success: false,
+        error: 'Request body is missing!',
+      });
+    }
+
+    // Check if necessary fields are present in the request body
+    const { userId, slotTimings, location, date } = req.body;
+    if (!userId || !slotTimings || !location || !date) {
+      console.log('Missing required fields in request body:', req.body);
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required fields in the request body!',
+      });
+    }
+
+    // Call the service function to reserve or create session
+    console.log('Calling sessionService.reserveOrCreateSession...');
+    await sessionService.reserveOrCreateSession(req.body, res);
+
+    console.log('Session reservation or creation attempted successfully');
   } catch (error) {
     console.error('Error in createSession:', error);
+    
+    // Log error details to help with debugging
+    console.error('Error Message:', error.message);
+    console.error('Stack Trace:', error.stack);
+
+    // Send error response to client
     res.status(400).json({
       success: false,
       error: error.message,
@@ -62,9 +89,31 @@ const getPreviousSessions = async (req, res) => {
   }
 };
 
+const checkSessionAvailability = async (req, res) => {
+  try {
+    const { sessionId } = req.params; // Get the sessionId from the URL parameter
+
+    // Call the service method to check availability
+    const isAvailable = await sessionService.checkSessionAvailability(sessionId);
+
+    // Respond with the availability status
+    res.status(200).json({
+      success: true,
+      available: isAvailable, // Return availability status
+    });
+  } catch (error) {
+    console.error('Error in checkSessionAvailability:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
-  createSession,
+  createorReserveSession,
   getSessions,
   getUpcomingSessions,
   getPreviousSessions,
+  checkSessionAvailability,
 };
