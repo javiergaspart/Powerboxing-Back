@@ -11,7 +11,9 @@ const SessionSchema = new mongoose.Schema({
             station: { type: Number, min: 1, max: 20 },
             status: { type: String, enum: ["confirmed", "pending"], default: "confirmed" }
         }
-    ]
+    ],
+    // 🟢 Added Trainer Availability Field
+    availability: { type: [[Boolean]], default: [] } 
 });
 
 module.exports = mongoose.model("Session", SessionSchema);

@@ -1,49 +1,49 @@
 const express = require("express");
-const dotenv = require("dotenv");
 const cors = require("cors");
+const dotenv = require("dotenv");
 const mongoose = require("mongoose");
 
 // Load environment variables
 dotenv.config();
 
-// Connect to MongoDB
-const connectDB = async () => {
-    try {
-        await mongoose.connect(process.env.MONGO_URI, {
-            useNewUrlParser: true,
-            useUnifiedTopology: true,
-        });
-        console.log("✅ MongoDB Connected...");
-    } catch (error) {
-        console.error("🔴 MongoDB Connection Error:", error);
-        process.exit(1);
-    }
-};
-
-// Initialize Express App
 const app = express();
+const PORT = process.env.PORT || 10000;
+
+// Middleware
 app.use(express.json());
 app.use(cors());
 
-// Connect to Database
-connectDB();
+// Route Imports
+const authRoutes = require("./routes/authRoutes");
+const boxerRoutes = require("./routes/boxerRoutes");
+const trainerRoutes = require("./routes/trainerRoutes"); // ✅ Ensure Trainer Routes is included
+const sessionRoutes = require("./routes/sessionRoutes");
+const leaderboardRoutes = require("./routes/leaderboardRoutes");
+const iotRoutes = require("./routes/iotRoutes");
 
-// Import Routes
-app.use("/api/auth", require("./routes/authRoutes"));
-app.use("/api/trainer", require("./routes/trainerRoutes"));
-app.use("/api/sessions", require("./routes/sessionRoutes"));
-app.use("/api/boxer", require("./routes/boxerRoutes"));
+// Route Definitions
+app.use("/api/auth", authRoutes);
+app.use("/api/boxer", boxerRoutes);
+app.use("/api/trainer", trainerRoutes); // ✅ Corrected trainer route registration
+app.use("/api/sessions", sessionRoutes);
+app.use("/api/leaderboard", leaderboardRoutes);
+app.use("/api/iot", iotRoutes);
 
 // Default Route
-app.get("/", (req, res) => {
-    res.send("🚀 PowerBoxing API is Running...");
+app.get("/api", (req, res) => {
+  res.json({ message: "✅ API is running" });
 });
 
-// Handle 404 Errors
-app.use((req, res) => {
-    res.status(404).json({ message: "❌ Route Not Found" });
-});
+// Connect to MongoDB
+mongoose
+  .connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => console.log("✅ MongoDB Connected"))
+  .catch((error) => console.error("❌ MongoDB Connection Error:", error));
 
 // Start Server
-const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`✅ Server running on http://localhost:${PORT}`);
+});
