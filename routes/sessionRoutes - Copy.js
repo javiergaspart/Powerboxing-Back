@@ -19,30 +19,21 @@ router.get("/balance/:userId", async (req, res) => {
 // ✅ Get available sessions
 router.get("/available", async (req, res) => {
   try {
-    let now = new Date(); // Current timestamp
-    console.log("🔍 Checking today's datetime:", now.toISOString());
-
-    // Fetch all sessions
-    let allSessions = await Session.find({});
-    console.log("📋 All sessions in DB before filtering:", allSessions.length);
-
-    let upcomingSessions = allSessions.filter(session => {
-      if (!session.date || !session.time) return false; // Skip invalid entries
-
-      // Ensure proper format for DateTime conversion
-      let sessionDateTimeStr = `${session.date} ${session.time}`;
-      let sessionDateTime = new Date(sessionDateTimeStr.replace(/-/g, "/")); // Fix format issue
-
-      console.log(`📅 Checking session: ${session.date} ${session.time} → ${sessionDateTime}`);
-
-      return sessionDateTime > now; // Only return future sessions
-    });
-
-    console.log("✅ Found upcoming sessions:", upcomingSessions.length, "sessions");
-
+    const today = new Date();
+    const upcomingSessions = await Session.find({ date: { $gte: today } }).sort("date");
     res.json(upcomingSessions);
   } catch (error) {
-    console.error("❌ Error fetching available sessions:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ✅ Get upcoming session for a user
+router.get("/upcoming/:userId", async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const upcomingSession = await Session.findOne({ participants: userId, date: { $gte: new Date() } }).sort("date");
+    res.json(upcomingSession || {});
+  } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
