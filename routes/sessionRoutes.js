@@ -1,3 +1,4 @@
+
 const express = require("express");
 const router = express.Router();
 const Session = require("../models/Session");
@@ -16,30 +17,25 @@ router.get("/balance/:userId", async (req, res) => {
   }
 });
 
-// ✅ Get available sessions
+// ✅ Get available sessions (fixed filtering for string-based dates)
 router.get("/available", async (req, res) => {
   try {
-    let now = new Date(); // Current timestamp
-    console.log("🔍 Checking today's datetime:", now.toISOString());
+    let now = new Date();
+    let todayDate = now.toISOString().split("T")[0]; // Extract YYYY-MM-DD as string
 
-    // Fetch all sessions
-    let allSessions = await Session.find({});
-    console.log("📋 All sessions in DB before filtering:", allSessions.length);
+    console.log("🔍 Fetching sessions from:", todayDate);
 
-    let upcomingSessions = allSessions.filter(session => {
-      if (!session.date || !session.time) return false; // Skip invalid entries
+    // Fetch all sessions first, then manually filter
+    const allSessions = await Session.find({})
+      .populate("participants.boxer_id", "name email")
+      .sort("date");
 
-      // Ensure proper format for DateTime conversion
-      let sessionDateTimeStr = `${session.date} ${session.time}`;
-      let sessionDateTime = new Date(sessionDateTimeStr.replace(/-/g, "/")); // Fix format issue
-
-      console.log(`📅 Checking session: ${session.date} ${session.time} → ${sessionDateTime}`);
-
-      return sessionDateTime > now; // Only return future sessions
-    });
+    // ✅ Manually filter sessions (MongoDB struggles with string-based date filtering)
+   const upcomingSessions = allSessions.filter(session => {
+  return new Date(session.date) >= new Date(todayDate);
+});
 
     console.log("✅ Found upcoming sessions:", upcomingSessions.length, "sessions");
-
     res.json(upcomingSessions);
   } catch (error) {
     console.error("❌ Error fetching available sessions:", error);
@@ -58,28 +54,86 @@ router.get("/history/:userId", async (req, res) => {
   }
 });
 
+// ✅ Get participants for a specific session (used in Trainer Dashboard)
+router.get("/:sessionId/participants", async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const session = await Session.findById(sessionId).populate("participants", "name email");
+
+    if (!session) {
+      return res.status(404).json({ error: "Session not found" });
+    }
+
+    res.json({ participants: session.participants });
+  } catch (error) {
+    console.error("❌ Error fetching session participants:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // ✅ Book a session
 router.post("/book", async (req, res) => {
   try {
     const { userId, sessionId } = req.body;
+
+    if (!userId || !sessionId) {
+      return res.status(400).json({ error: "Missing userId or sessionId" });
+    }
+
     const session = await Session.findById(sessionId);
 
     if (!session) {
-      return res.status(404).json({ message: "Session not found" });
+      return res.status(404).json({ error: "Session not found" });
     }
 
-    const user = await User.findById(userId);
-    if (user.sessions_balance <= 0) {
-      return res.status(400).json({ message: "Not enough session balance" });
+    // 🔍 Check if user is already booked in this session
+    if (session.participants.includes(userId)) {
+      return res.status(400).json({ error: "User is already booked in this session" });
     }
 
-    user.sessions_balance -= 1;
-    await user.save();
-    session.participants.push(userId);
+    // 🔄 Reduce available slots & add user to participants
+    if (session.available_slots > 0) {
+      session.available_slots -= 1;
+      session.participants.push({ boxer_id: userId, status: "confirmed" });
+      await session.save();
+
+      return res.status(200).json({ message: "Session booked successfully", session });
+    } else {
+      return res.status(400).json({ error: "No available slots" });
+    }
+  } catch (error) {
+    console.error("❌ Error booking session:", error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+// ✅ Assign a participant to a punching bag station
+router.post("/:sessionId/assign-station", async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const { userId, stationNumber } = req.body;
+
+    const session = await Session.findById(sessionId);
+    if (!session) {
+      return res.status(404).json({ error: "Session not found" });
+    }
+
+    if (!session.assignments) {
+      session.assignments = [];
+    }
+
+    // Check if the user is already assigned
+    const existingAssignment = session.assignments.find(a => a.userId.toString() === userId);
+    if (existingAssignment) {
+      return res.status(400).json({ error: "User is already assigned to a station" });
+    }
+
+    session.assignments.push({ userId, stationNumber });
     await session.save();
 
-    res.json({ message: "Session booked successfully" });
+    res.status(200).json({ message: "User assigned successfully", session });
   } catch (error) {
+    console.error("❌ Error assigning user:", error);
     res.status(500).json({ error: error.message });
   }
 });
