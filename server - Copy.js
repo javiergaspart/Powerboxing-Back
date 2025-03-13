@@ -30,7 +30,7 @@ mongoose.connect(process.env.MONGO_URI, {
 });
 
 // ✅ Route mounting (Fixes 404 issues)
-app.use("/api", sessionRoutes);
+app.use("/api/sessions", sessionRoutes);
 app.use("/api/trainers", trainerRoutes);
 app.use("/api/boxers", boxerRoutes);
 app.use("/api/auth", authRoutes);

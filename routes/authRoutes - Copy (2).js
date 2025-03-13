@@ -67,17 +67,18 @@ router.post("/signup", async (req, res) => {
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
-        let user;  // ✅ Define `user` variable
 
         if (role === "trainer") {
-            user = new Trainer({
+            const trainer = new Trainer({
                 name,
                 email,
                 password: hashedPassword,
                 role: "trainer",
             });
+            await trainer.save();
+            console.log("✅ Trainer Registered Successfully:", email);
         } else {
-            user = new User({
+            const user = new User({
                 name,
                 email,
                 phone,
@@ -87,23 +88,11 @@ router.post("/signup", async (req, res) => {
                 newcomer: true,
                 join_date: new Date(),
             });
+            await user.save();
+            console.log("✅ User Registered Successfully:", email);
         }
 
-        await user.save();  // ✅ Save the user correctly
-        console.log("✅ User Registered Successfully:", email);
-
-        // ✅ Generate a token AFTER `user` is created
-        const token = jwt.sign(
-            { userId: user._id, role: user.role },
-            process.env.JWT_SECRET,
-            { expiresIn: "7d" }
-        );
-
-        res.status(201).json({
-            message: "User registered successfully",
-            token // ✅ Return token to frontend
-        });
-
+        res.status(201).json({ message: "User registered successfully" });
     } catch (error) {
         console.error("❌ Signup Error:", error);
         res.status(500).json({ message: "Server Error" });

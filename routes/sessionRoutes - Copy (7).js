@@ -55,7 +55,7 @@ router.get("/sessions/balance/:userId", async (req, res) => {
   }
 });
 
-// ✅ Book a Session (FIXED: Ensures Participants are Saved)
+// ✅ Book a Session (FIXED)
 router.post("/sessions/book", async (req, res) => {
   try {
     const { userId, sessionId } = req.body;
@@ -81,18 +81,11 @@ router.post("/sessions/book", async (req, res) => {
       return res.status(400).json({ error: "User already booked in this session" });
     }
 
-    // ✅ Use `findByIdAndUpdate` to add participant and decrement available slots
-    const updatedSession = await Session.findByIdAndUpdate(
-      sessionId,
-      { 
-        $push: { participants: userId },
-        $inc: { available_slots: -1 }
-      },
-      { new: true } // Returns the updated document
-    );
+    // Add the user to the session
+    session.participants.push(userId);
+    await session.save();
 
-    console.log("✅ Updated session:", updatedSession);
-    res.status(200).json({ message: "Session booked successfully", updatedSession });
+    res.status(200).json({ message: "Session booked successfully" });
   } catch (error) {
     console.error("❌ Error booking session:", error);
     res.status(500).json({ error: "Internal server error" });
