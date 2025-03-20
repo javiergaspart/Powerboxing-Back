@@ -5,7 +5,7 @@ const router = express.Router();
 const sessionController = require('../controllers/sessionController');
 
 // This route will create a new session with the provided session details.
-router.post('/reserve-or-create', sessionController.createorReserveSession);
+router.post('/book', sessionController.createorReserveSession);
 
 // This route will retrieve all the sessions from the database.
 router.get('/', sessionController.getSessions);

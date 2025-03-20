@@ -6,5 +6,7 @@ const resultsController = require('../controllers/resultsController');
 
 router.post('/', resultsController.savePunchResult);
 router.get('/session/:sessionId', resultsController.getResultsBySession);
+router.post('/session/:sessionId/user/:userId', resultsController.updatePunchResult);
+
 
 module.exports = router;

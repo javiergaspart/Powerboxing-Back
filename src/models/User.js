@@ -1,6 +1,11 @@
 const mongoose = require('mongoose');
+const bcrypt = require('bcrypt');
 
 const userSchema = new mongoose.Schema({
+  _id: {
+    type: mongoose.Schema.Types.ObjectId,
+    auto: true, // Auto-generate ID
+  },
   username: {
     type: String,
     required: true,
@@ -11,23 +16,49 @@ const userSchema = new mongoose.Schema({
     required: true,
     unique: true,
   },
+  phone: {
+    type: String,
+  },
   password: {
     type: String,
     required: true,
   },
-  createdAt: {
+  profileImage: { 
+    type: String 
+  },
+  membershipType: { 
+    type: String,
+  }, 
+  joinDate: {
     type: Date,
     default: Date.now,
+  },
+  newcomer: {
+    type: Boolean,
+    default: true,
+  },
+  sessionBalance: {
+    type: Number,
+    default: 1,
   },
   lastLogin: {
     type: Date,
   },
-  resetPasswordToken: { // Field for storing the password reset token
+  resetPasswordToken: { 
     type: String,
   },
-  resetPasswordExpires: { // Field for storing token expiration time
+  resetPasswordExpires: { 
     type: Date,
   },
+});
+
+// **Hash password before saving**
+userSchema.pre('save', async function (next) {
+  if (this.isModified('password')) {
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+  }
+  next();
 });
 
 const User = mongoose.model('User', userSchema);

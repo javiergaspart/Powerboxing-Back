@@ -102,15 +102,20 @@ const getUpcomingSessions = async (req, res) => {
     const sessions = await Session.find({
       date: { $gte: new Date() }, // Fetch only upcoming sessions
       bookedUsers: userObjectId, // Match sessions with this userId in bookedUsers
-    }).populate('bookedUsers').populate('punchingBags')
+    }).populate('bookedUsers', 'username').populate('punchingBags')
       .sort({ date: 1 }); // Sort sessions by date in ascending order
 
     // Log number of sessions fetched
     console.log(`Fetched ${sessions.length} sessions for user ID: ${userId}`);
 
+    const updatedSessions = sessions.map(session => ({
+      ...session.toObject(),
+      isCompleted: false,
+    }));
+
     res.status(200).json({
       success: true,
-      data: sessions,
+      data: updatedSessions,
     });
   } catch (error) {
     // Log the error
@@ -146,7 +151,7 @@ const getPreviousSessions = async (req, res) => {
     const sessions = await Session.find({
       date: { $lt: new Date() },  // Sessions that are in the past
       bookedUsers: userObjectId,  // Ensure the user is a participant
-    }).populate('bookedUsers').populate('punchingBags');
+    }).populate('bookedUsers', 'username').populate('punchingBags');
 
     // Log the result before sending the response
     console.log('Fetched Sessions:', sessions);
@@ -154,10 +159,14 @@ const getPreviousSessions = async (req, res) => {
     if (sessions.length === 0) {
       console.log(`No previous sessions found for user ${userId}`);
     }
+    const updatedSessions = sessions.map(session => ({
+      ...session.toObject(),
+      isCompleted: true,
+    }));
 
     res.status(200).json({
       success: true,
-      data: sessions,
+      data: updatedSessions,
     });
   } catch (error) {
     console.error('Error fetching previous sessions:', error);

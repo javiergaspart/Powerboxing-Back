@@ -7,5 +7,7 @@ const userController = require('../controllers/userController');
 router.get('/:id', userController.getUserById);
 router.put('/:id/last-login', userController.updateUserLastLogin);
 router.get('/', userController.getAllUsers);
+router.post('/upload-profile-image/:id', userController.upload.single('image'), userController.uploadProfileImage);
+router.put('/updateProfile/:id', userController.updateProfile);
 
 module.exports = router;

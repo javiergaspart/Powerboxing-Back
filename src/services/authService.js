@@ -32,6 +32,12 @@ const registerUser = async (userData) => {
     username,
     email,
     password: hashedPassword,
+    phone:' ',
+    profileImage: ' ',
+    membershipType: 'basic', // Default membership type
+    joinDate: new Date(), // Set join date
+    newcomer: true, // Mark as a new user
+    sessionBalance: 1, // Give 1 session by default
   });
 
   await user.save();
@@ -58,6 +64,7 @@ const loginUser = async (email, password) => {
     expiresIn: '1h',
   });
   console.log('Login successful, token generated:', token);
+  console.log('User ', user);
 
   return { token, user };
 };

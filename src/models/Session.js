@@ -22,7 +22,7 @@ const sessionSchema = new mongoose.Schema({
     ],
     validate: {
       validator: function (v) {
-        return /\d{1,2}:\d{2} (AM|PM)/.test(v); // Regex for validating time formats
+        return /\d{1,2}:\d{2} (AM|PM)/.test(v);
       },
       message: '{VALUE} is not a valid time slot!',
     },
@@ -46,10 +46,30 @@ const sessionSchema = new mongoose.Schema({
       ref: 'PunchingBag',
     },
   ],
+  isCompleted: {
+    type: Boolean,
+    default: false, // Default to false for ongoing sessions
+  },
+  time: {
+    type: String,
+    required: true
+  },
+  username: {
+    type: String,
+    default: ''
+  },
   createdAt: {
     type: Date,
-    default: Date.now,
+    default: Date.now
   },
+  availableSlots: {
+    type: Number,
+    required: true
+  },
+  totalSlots: {
+    type: Number,
+    required: true
+  }
 });
 
 const Session = mongoose.model('Session', sessionSchema);

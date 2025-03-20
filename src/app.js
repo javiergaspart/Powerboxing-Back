@@ -11,10 +11,14 @@ const sessionRoutes = require('./routes/sessionRoutes');
 const userRoutes = require('./routes/userRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 
+
 // Load environment variables
 dotenv.config();
 
 const app = express();
+
+const path = require('path');
+
 
 // Middleware to parse JSON requests
 app.use(express.json());
@@ -51,6 +55,9 @@ app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ error: 'Something went wrong!' });
 });
+
+app.use('/fitboxing/uploads', express.static(path.join(__dirname, 'public/uploads')));
+
 
 // Export the app for testing or further configuration
 module.exports = app;
