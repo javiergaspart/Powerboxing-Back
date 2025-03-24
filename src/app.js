@@ -46,7 +46,7 @@ mongoose.connect(process.env.MONGODB_URI, {
 
 
 app.get('/', (req, res) => {
-  res.send('<h1>Welcome to My Node.js Backend!</h1><p>Hosted on Vercel 🚀</p>');
+  res.send('<h1>Welcome to My Node.js Backend!');
 });
 
 // Route definitions
