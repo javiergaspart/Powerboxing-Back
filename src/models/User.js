@@ -9,7 +9,6 @@ const userSchema = new mongoose.Schema({
   username: {
     type: String,
     required: true,
-    unique: true,
   },
   email: {
     type: String,
@@ -49,6 +48,14 @@ const userSchema = new mongoose.Schema({
   },
   resetPasswordExpires: { 
     type: Date,
+  },
+  resetOTP: {  // Updated field
+    type: String,
+    default: null,
+  },
+  otpExpires: { // Updated field
+    type: Date,
+    default: null,
   },
 });
 

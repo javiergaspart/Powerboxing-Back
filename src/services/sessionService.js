@@ -2,12 +2,13 @@
 
 const Session = require('../models/Session');
 const mongoose = require('mongoose'); // Import mongoose
+const User = require('../models/User'); // Ensure correct path
 
 // Create a new session
 const reserveOrCreateSession = async (req, res) => {
-  console.log("Request received:", req);
+  console.log("Request received:", req.body);
 
-  const { userId, slotTimings, location, date } = req;
+  const { userId, slotTimings, location, date, totalSlots, time } = req;
   console.log("Checking session for slotTimings:", slotTimings, "Location:", location, "Date:", date);
 
   const normalizedSlotTimings = slotTimings.replace(/\s/g, ' ').trim();
@@ -17,6 +18,17 @@ const reserveOrCreateSession = async (req, res) => {
   try {
     // Check if a session with the same slot timings, location, and date exists
     console.log("Searching for session with:", { slotTimings: normalizedSlotTimings, location: normalizedLocation, date: normalizedDate });
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Check session balance before proceeding
+    if (user.sessionBalance < 1) {
+      return res.status(400).json({ message: "Session Balance not Available!" });
+    }
+
     let session = await Session.findOne({ slotTimings: normalizedSlotTimings, location: normalizedLocation, date: normalizedDate });
 
     console.log("Session found:", session);
@@ -30,8 +42,7 @@ const reserveOrCreateSession = async (req, res) => {
       }
 
       // Check if slots are available
-      const totalSlots = 20; // Default total slots
-      if (session.bookedUsers.length >= totalSlots) {
+      if (session.bookedUsers.length >= session.totalSlots) {
         return res.status(400).json({ message: 'No available slots for this session' });
       }
 
@@ -52,11 +63,21 @@ const reserveOrCreateSession = async (req, res) => {
       location: normalizedLocation,
       instructor: 'Default Instructor',
       bookedUsers: [userId],
+      totalSlots: totalSlots || 10, // Default to 10 slots if not provided
+      availableSlots: totalSlots || 10, // Initially, available slots = total slots
+      time: time
     });
 
     await session.save();
 
-    return res.status(200).json({ message: 'New session created and reservation successful', data: session });
+    user.sessionBalance -= 1;
+    await user.save();
+
+    return res.status(200).json({ 
+      message: 'Reservation successful', 
+      session,
+      newBalance: user.sessionBalance  // Return updated balance
+    });
   } catch (error) {
     console.error('Error in reserveOrCreateSession:', error);
     return res.status(500).json({ message: 'Failed to reserve or create session' });
@@ -100,7 +121,7 @@ const getUpcomingSessions = async (req, res) => {
 
     // Find sessions where the user is part of bookedUsers and sort by date
     const sessions = await Session.find({
-      date: { $gte: new Date() }, // Fetch only upcoming sessions
+      date: { $gte: new Date(new Date().setHours(0, 0, 0, 0)) }, // Fetch only upcoming sessions
       bookedUsers: userObjectId, // Match sessions with this userId in bookedUsers
     }).populate('bookedUsers', 'username').populate('punchingBags')
       .sort({ date: 1 }); // Sort sessions by date in ascending order
@@ -201,10 +222,34 @@ const checkSessionAvailability = async (sessionId) => {
   }
 };
 
+// Function to update session balance
+const updateSessionBalance = async (userId) => {
+  try {
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return { success: false, message: "User not found" };
+    }
+
+    if (user.sessionBalance < 1) {
+      return { success: false, message: "Session Balance not Available!" };
+    }
+
+    user.sessionBalance -= 1;
+    await user.save();
+
+    return { success: true, message: "Session balance updated successfully", newBalance: user.sessionBalance };
+  } catch (error) {
+    console.error("Error updating session balance:", error);
+    return { success: false, message: "Internal server error" };
+  }
+};
+
 module.exports = {
   reserveOrCreateSession,
   getSessions,
   getUpcomingSessions,
   getPreviousSessions,
-  checkSessionAvailability, // Add this line
+  checkSessionAvailability, 
+  updateSessionBalance,
 };

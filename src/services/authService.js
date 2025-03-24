@@ -23,16 +23,24 @@ const registerUser = async (userData) => {
     throw new Error('Password is required');
   }
 
+   // Check if password is provided and meets length requirement
+   if (password.length < 6) {
+    console.log('Registration failed: Password must be at least 6 characters long');
+    throw new Error('Password must be at least 6 characters long');
+  }
+
   // Hash the password
   const hashedPassword = await bcrypt.hash(password, 10);
   console.log('Password hashed successfully');
+
+  console.log('bcrypt version:', bcrypt.version);
 
   // Create new user
   const user = new User({
     username,
     email,
     password: hashedPassword,
-    phone:' ',
+    phone:'0',
     profileImage: ' ',
     membershipType: 'basic', // Default membership type
     joinDate: new Date(), // Set join date
@@ -47,18 +55,40 @@ const registerUser = async (userData) => {
 
 const loginUser = async (email, password) => {
   console.log('Logging in user with email:', email);
-  
+  console.log(password + " pass");
+
   const user = await User.findOne({ email });
   if (!user) {
     console.log('Login failed: Invalid email or password');
     throw new Error('Invalid email or password');
   }
 
-  const isMatch = await bcrypt.compare(password, user.password);
+  console.log('user pass: ' + user.password);
+
+  bcrypt.hash(password, 10, (err, hash) => {
+    if (err) console.log(err);
+    else {
+      console.log("Rehashed password:", hash);
+      console.log("Is the rehashed password equal to the stored hash?", hash === user.password);
+    }
+  });
+
+  bcrypt.compare(password, user.password, (err, result) => {
+    if (err) {
+      console.log('Error comparing passwords:', err);
+    } else {
+      console.log('Password comparison result:', result);  // Should be true if the password matches
+    }
+  });
+  
+  const isMatch = bcrypt.compare(password, user.password);
+
   if (!isMatch) {
-    console.log('Login failed: Invalid email or password');
+    console.log('Password comparison result:', isMatch);
+    console.log('Login failed: Invalid password');
     throw new Error('Invalid email or password');
   }
+
 
   const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
     expiresIn: '1h',
@@ -112,6 +142,10 @@ const forgotPassword = async (email) => {
 
 const resetPassword = async (token, newPassword) => {
   console.log('Resetting password with token:', token);
+
+  if (newPassword.length < 6) {
+    return { success: false, message: 'Password must be at least 6 characters long' };
+  }
 
   // Hash the token
   const hashedToken = crypto.createHash('sha256').update(token).digest('hex');

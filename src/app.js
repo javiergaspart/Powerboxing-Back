@@ -10,6 +10,8 @@ const sensorRoutes = require('./routes/sensorRoutes');
 const sessionRoutes = require('./routes/sessionRoutes');
 const userRoutes = require('./routes/userRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
+const passwordRoutes = require('./routes/passwordRoutes');
+const membershipRoutes = require('./routes/membershipRoutes');
 
 
 // Load environment variables
@@ -40,6 +42,13 @@ mongoose.connect(process.env.MONGODB_URI, {
   console.error('MongoDB connection error:', error);
 });
 
+//welcome page
+
+
+app.get('/', (req, res) => {
+  res.send('<h1>Welcome to My Node.js Backend!</h1><p>Hosted on Vercel 🚀</p>');
+});
+
 // Route definitions
 app.use('/fitboxing/auth', authRoutes);                    // Handles authentication routes
 app.use('/fitboxing/punching-bags', punchingBagRoutes);    // Handles punching bag routes
@@ -48,7 +57,8 @@ app.use('/fitboxing/sensors', sensorRoutes);               // Handles sensor rou
 app.use('/fitboxing/sessions', sessionRoutes);             // Handles session routes
 app.use('/fitboxing/users', userRoutes);                   // Handles user-related routes
 app.use('/fitboxing/payments', paymentRoutes);             // Handles payment-related routes
-
+app.use('/fitboxing/password', passwordRoutes);            // Handles password-related routes
+app.use('/fitboxing/membership', membershipRoutes);        // Handles password-related routes
 
 // Error handling middleware
 app.use((err, req, res, next) => {
