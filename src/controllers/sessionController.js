@@ -1,23 +1,23 @@
 const sessionService = require('../services/sessionService');
 
-// Get session details by session ID
-const getSessionDetails = async (req, res) => {
-  const { sessionId } = req.params; // Extract session ID from URL parameters
+// // Get session details by session ID
+// const getSessionDetails = async (req, res) => {
+//   const { sessionId } = req.params; // Extract session ID from URL parameters
 
-  try {
-    const session = await sessionService.getSessionDetails(sessionId); // Call service to fetch session details
-    res.status(200).json({
-      success: true,
-      data: session,
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({
-      success: false,
-      message: error.message || 'Server error',
-    });
-  }
-};
+//   try {
+//     const session = await sessionService.getSessionDetails(sessionId); // Call service to fetch session details
+//     res.status(200).json({
+//       success: true,
+//       data: session,
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({
+//       success: false,
+//       message: error.message || 'Server error',
+//     });
+//   }
+// };
 
 // Create a new session
 const createorReserveSession = async (req, res) => {
@@ -276,7 +276,7 @@ const getPastSessionsByTrainer = async (req, res) => {
 
 
 module.exports = {
-  getSessionDetails,
+  // getSessionDetails,
   createorReserveSession,
   getSessions,
   getUpcomingSessions,

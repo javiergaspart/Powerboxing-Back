@@ -7,7 +7,6 @@ const sessionSchema = new mongoose.Schema({
   },
   slotTiming: {
     type: String,
-    required: true,
     validate: {
       validator: function (v) {
         // Remove special characters like non-breaking spaces
@@ -45,7 +44,6 @@ const sessionSchema = new mongoose.Schema({
   trainerId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Trainer',
-    required: true,
   },
   bookedUsers: [
     {

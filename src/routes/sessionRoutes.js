@@ -5,7 +5,7 @@ const router = express.Router();
 const sessionController = require('../controllers/sessionController');
 
 // Route to fetch session details by session ID
-router.get('/:sessionId', sessionController.getSessionDetails);
+// router.get('/:sessionId', sessionController.getSessionDetails);
 
 // This route will create a new session with the provided session details.
 router.post('/book', sessionController.createorReserveSession);

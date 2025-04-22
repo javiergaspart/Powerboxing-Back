@@ -5,24 +5,24 @@ const mongoose = require('mongoose'); // Import mongoose
 const User = require('../models/User'); 
 const Trainer = require('../models/Trainer');
 
-// Fetch session details by session ID
-const getSessionDetails = async (sessionId) => {
-  try {
-    // Find session by ID and populate relevant fields (like trainer, booked users, punching bags)
-    const session = await Session.findById(sessionId)
-      .populate('trainerId') // Populate trainer details
-      .populate('bookedUsers') // Populate booked users details
-      .populate('punchingBags'); // Populate punching bags details
+// // Fetch session details by session ID
+// const getSessionDetails = async (sessionId) => {
+//   try {
+//     // Find session by ID and populate relevant fields (like trainer, booked users, punching bags)
+//     const session = await Session.findById(sessionId)
+//       .populate('trainerId') // Populate trainer details
+//       .populate('bookedUsers') // Populate booked users details
+//       .populate('punchingBags'); // Populate punching bags details
     
-    if (!session) {
-      throw new Error('Session not found');
-    }
+//     if (!session) {
+//       throw new Error('Session not found');
+//     }
 
-    return session;
-  } catch (error) {
-    throw error;
-  }
-};
+//     return session;
+//   } catch (error) {
+//     throw error;
+//   }
+// };
 
 // Create a new session
 const reserveOrCreateSession = async (req, res) => {
@@ -49,7 +49,7 @@ const reserveOrCreateSession = async (req, res) => {
       return res.status(400).json({ message: "Session Balance not Available!" });
     }
 
-    let session = await Session.findOne({ slotTimings: normalizedSlotTimings, location: normalizedLocation, date: normalizedDate });
+    let session = await Session.findOne({ slotTiming: normalizedSlotTimings, location: normalizedLocation, date: normalizedDate });
 
     console.log("Session found:", session);
 
@@ -79,7 +79,7 @@ const reserveOrCreateSession = async (req, res) => {
 
     session = new Session({
       date: normalizedDate,
-      slotTimings: normalizedSlotTimings,
+      slotTiming: normalizedSlotTimings,
       location: normalizedLocation,
       instructor: 'Default Instructor',
       bookedUsers: [userId],
@@ -122,7 +122,6 @@ const getSessions = async () => {
 };
 
 // Get upcoming sessions by location
-// Get upcoming sessions by location
 const getUpcomingSessions = async (req, res) => {
   try {
     const { userId } = req.query; // Extract userId from route params
@@ -140,9 +139,9 @@ const getUpcomingSessions = async (req, res) => {
     const userObjectId = new mongoose.Types.ObjectId(userId);
     const currentTime = new Date();
 
-    // Find sessions where the user is part of bookedUsers and sort by date
+    // Modify query to filter based on the session date
     const sessions = await Session.find({
-      date: { $gt: currentTime }, 
+      date: { $gt: currentTime }, // Sessions that are upcoming
       bookedUsers: userObjectId,
     }).populate('bookedUsers', 'username')
       .populate('punchingBags')
@@ -170,6 +169,7 @@ const getUpcomingSessions = async (req, res) => {
     });
   }
 };
+
 
 
 // Get previous sessions for a user
@@ -443,7 +443,7 @@ const getPastSessionsByTrainer = async (trainerId, date) => {
 
 
 module.exports = {
-  getSessionDetails,
+  // getSessionDetails,
   reserveOrCreateSession,
   getSessions,
   getUpcomingSessions,
