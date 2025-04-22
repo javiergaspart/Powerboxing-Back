@@ -12,6 +12,7 @@ const userRoutes = require('./routes/userRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const passwordRoutes = require('./routes/passwordRoutes');
 const membershipRoutes = require('./routes/membershipRoutes');
+const trainerRoutes = require('./routes/trainerRoutes');
 
 
 // Load environment variables
@@ -59,6 +60,7 @@ app.use('/fitboxing/users', userRoutes);                   // Handles user-relat
 app.use('/fitboxing/payments', paymentRoutes);             // Handles payment-related routes
 app.use('/fitboxing/password', passwordRoutes);            // Handles password-related routes
 app.use('/fitboxing/membership', membershipRoutes);        // Handles password-related routes
+app.use('/fitboxing/trainer', trainerRoutes);                        // Handles trainer-related routes
 
 // Error handling middleware
 app.use((err, req, res, next) => {

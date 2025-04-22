@@ -1,5 +1,24 @@
 const sessionService = require('../services/sessionService');
 
+// Get session details by session ID
+const getSessionDetails = async (req, res) => {
+  const { sessionId } = req.params; // Extract session ID from URL parameters
+
+  try {
+    const session = await sessionService.getSessionDetails(sessionId); // Call service to fetch session details
+    res.status(200).json({
+      success: true,
+      data: session,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Server error',
+    });
+  }
+};
+
 // Create a new session
 const createorReserveSession = async (req, res) => {
   try {
@@ -110,10 +129,162 @@ const checkSessionAvailability = async (req, res) => {
   }
 };
 
+// Controller function to save trainer slots for a given day
+const saveTrainerSlots = async (req, res) => {
+  try {
+    // Log the incoming request body for debugging
+    console.log('Request Body:', req.body);
+
+    // Check if the body contains necessary fields
+    const { date, availableSlots, location, trainerId, slotTimings } = req.body;
+    if (!date || !availableSlots || !location || !trainerId || !slotTimings) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required fields in the request body!',
+      });
+    }
+
+    // Call the service function to save trainer slots
+    const savedSession = await sessionService.saveTrainerSlots(req.body);
+
+    // Send success response
+    res.status(201).json({
+      success: true,
+      message: 'Trainer slots saved successfully',
+      data: savedSession,
+    });
+  } catch (error) {
+    console.error('Error in saveTrainerSlots:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+};
+
+// Controller to handle fetching available sessions for a given date from current time onwards
+const getAvailableSessionsForDate = async (req, res) => {
+  try {
+    const { date } = req.query;
+
+    if (!date) {
+      return res.status(400).json({ success: false, message: "Date is required" });
+    }
+
+    // Fetch available sessions using the service function
+    const availableSessions = await sessionService.getAvailableSessionsForDate(date);
+
+    if (availableSessions.length === 0) {
+      return res.status(404).json({ success: false, message: "No available sessions for this date" });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Available sessions fetched successfully',
+      data: availableSessions,
+    });
+  } catch (error) {
+    console.error('Error in getAvailableSessionsForDate:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to fetch sessions',
+    });
+  }
+};
+
+
+// Controller for deleting a session
+const deleteSessionByDateTime = async (req, res) => {
+  const { trainerId } = req.params;
+  const { dateTime } = req.body;
+
+  try {
+    const deleted = await sessionService.deleteSessionByDateTime(trainerId, dateTime);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Session deleted successfully.',
+      data: deleted,
+    });
+  } catch (error) {
+    console.error('❌ Error in deleteSessionByDateTime:', error.message);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+const getSessionsByTrainer = async (req, res) => {
+  const { trainerId } = req.params;
+  const { date } = req.query;
+
+  // Ensure the date is valid
+  const parsedDate = Date.parse(date);
+
+  if (isNaN(parsedDate)) {
+    return res.status(400).json({
+      success: false,
+      message: 'Invalid date format. Please provide a valid date.',
+    });
+  }
+
+  try {
+    const sessions = await sessionService.getSessionsByTrainer(trainerId, new Date(parsedDate));
+    return res.status(200).json({
+      success: true,
+      data: sessions,
+    });
+  } catch (error) {
+    console.error('❌ Error in getSessionsByTrainer:', error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+
+const getPastSessionsByTrainer = async (req, res) => {
+  const { trainerId } = req.params;
+  const { date } = req.query;
+
+  // Ensure the date is valid
+  const parsedDate = Date.parse(date);
+
+  if (isNaN(parsedDate)) {
+    return res.status(400).json({
+      success: false,
+      message: 'Invalid date format. Please provide a valid date.',
+    });
+  }
+
+  try {
+    const sessions = await sessionService.getPastSessionsByTrainer(trainerId, new Date(parsedDate));
+    return res.status(200).json({
+      success: true,
+      data: sessions,
+    });
+  } catch (error) {
+    console.error('❌ Error in getPastSessionsByTrainer:', error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+
 module.exports = {
+  getSessionDetails,
   createorReserveSession,
   getSessions,
   getUpcomingSessions,
   getPreviousSessions,
   checkSessionAvailability,
+  saveTrainerSlots,
+  getAvailableSessionsForDate,
+  deleteSessionByDateTime,
+  getSessionsByTrainer,
+  getPastSessionsByTrainer,
 };

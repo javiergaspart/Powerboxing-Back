@@ -5,34 +5,47 @@ const sessionSchema = new mongoose.Schema({
     type: Date,
     required: true,
   },
-  slotTimings: {
+  slotTiming: {
     type: String,
     required: true,
-    enum: [
-      '9:00 AM', '9:30 AM',
-      '10:00 AM', '10:30 AM',
-      '11:00 AM', '11:30 AM',
-      '12:00 PM', '12:30 PM',
-      '1:00 PM', '1:30 PM',
-      '2:00 PM', '2:30 PM',
-      '3:00 PM', '3:30 PM',
-      '4:00 PM', '4:30 PM',
-      '5:00 PM', '5:30 PM',
-      '6:00 PM'
-    ],
     validate: {
       validator: function (v) {
-        return /\d{1,2}:\d{2} (AM|PM)/.test(v);
+        // Remove special characters like non-breaking spaces
+        v = v.replace(/\u202F|\u00A0/g, ' ').trim();
+  
+        const match = v.match(/^(\d{1,2}):(\d{2}) (AM|PM)$/);
+        if (!match) return false;
+  
+        let [_, hourStr, minuteStr, period] = match;
+        let hour = parseInt(hourStr, 10);
+        let minute = parseInt(minuteStr, 10);
+  
+        if (hour < 1 || hour > 12 || minute > 59) return false;
+  
+        // Convert to 24-hour format
+        if (period === 'PM' && hour !== 12) hour += 12;
+        if (period === 'AM' && hour === 12) hour = 0;
+  
+        const timeInMinutes = hour * 60 + minute;
+        const minTime = 10 * 60; // 10:00 AM
+        const maxTime = 18 * 60; // 6:00 PM
+  
+        return timeInMinutes >= minTime && timeInMinutes <= maxTime;
       },
-      message: '{VALUE} is not a valid time slot!',
+      message: '{VALUE} is not a valid time between 10:00 AM and 6:00 PM!',
     },
-  },
+  },  
   location: {
     type: String,
     required: true,
   },
   instructor: {
     type: String,
+  },
+  trainerId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Trainer',
+    required: true,
   },
   bookedUsers: [
     {
@@ -48,28 +61,24 @@ const sessionSchema = new mongoose.Schema({
   ],
   isCompleted: {
     type: Boolean,
-    default: false, // Default to false for ongoing sessions
-  },
-  time: {
-    type: String,
-    required: true
+    default: false,
   },
   username: {
     type: String,
-    default: ''
+    default: '',
   },
   createdAt: {
     type: Date,
-    default: Date.now
+    default: Date.now,
   },
   availableSlots: {
     type: Number,
-    required: true
+    required: true,
   },
   totalSlots: {
     type: Number,
-    required: true
-  }
+    required: true,
+  },
 });
 
 const Session = mongoose.model('Session', sessionSchema);
