@@ -92,7 +92,7 @@ const uploadProfileImage = async (req, res) => {
 
     console.log("Image Path: ", req.file.filename);
     const userId = req.params.id;
-    const imagePath = `/uploads/${req.file.filename}`; // Path to store in DB
+    const imagePath = `uploads/${req.file.filename}`; // Path to store in DB
 
     console.log("Image path", imagePath);
     const updatedUser = await userService.uploadProfileImage(userId, imagePath);
