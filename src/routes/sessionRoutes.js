@@ -29,13 +29,18 @@ router.post('/saveTrainerSlots', sessionController.saveTrainerSlots);
 router.get('/available', sessionController.getAvailableSessionsForDate);
 
 // Route for deleting a trainer's session
-router.delete('/:trainerId/slot', sessionController.deleteSessionByDateTime);
+router.post('/:trainerId/slot', sessionController.deleteSessionByDateTime);
 
 // Route to get all sessions for a trainer
 router.get('/trainer/:trainerId/slots', sessionController.getSessionsByTrainer);
 
-// Route to get past sessions for a specific trainer on a given date
-router.get('/trainer/:trainerId/past-sessions', sessionController.getPastSessionsByTrainer);
+// Route to get all sessions for the given date
+router.get('/all-slots', sessionController.getAllSlotsByDate);
 
+// Define the route to get session details by ID
+router.get('/:id', sessionController.getSessionDetails);
+
+// Map users and punching bags for a session
+router.post('/:sessionId/map-users-to-bags', sessionController.mapUsersToPunchingBags);
 
 module.exports = router;

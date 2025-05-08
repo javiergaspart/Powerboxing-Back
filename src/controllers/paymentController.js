@@ -1,38 +1,32 @@
-// src/controllers/paymentController.js
+const paymentService = require('../services/paymentService');
 
-const axios = require('axios');
-
-const createPayment = async (req, res) => {
-    const { userId, slotId } = req.body; // Get user and slot information
-    const paymentAmount = 500; // Payment amount in INR
-
-    try {
-        const response = await axios.post('https://books.zoho.com/api/v3/payment', {
-            amount: paymentAmount,
-            currency: 'INR',
-            // Add other required parameters here
-        }, {
-            headers: {
-                'Authorization': `Zoho-oauthtoken ${process.env.ZOHO_API_TOKEN}`, // Use your Zoho API token
-                'Content-Type': 'application/json',
-            },
-        });
-
-        // Redirect user to the payment URL
-        res.status(200).json({ paymentUrl: response.data.payment_url });
-    } catch (error) {
-        console.error('Payment creation error:', error);
-        res.status(500).json({ error: 'Payment initiation failed' });
-    }
+const createOrder = async (req, res) => {
+  const { amount } = req.body;
+  try {
+    const order = await paymentService.createOrder(amount);
+    res.json({
+      orderId: order.id,
+      amount: order.amount,
+      currency: order.currency,
+      key: process.env.RAZORPAY_KEY_ID,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Order creation failed');
+  }
 };
 
-const paymentSuccess = async (req, res) => {
-    // Logic to handle successful payment notification
-    // Update slot booking status in your database
-    res.status(200).json({ message: 'Payment processed successfully' });
+const verifyPayment = (req, res) => {
+  const isValid = paymentService.verifyPayment(req.body);
+
+  if (isValid) {
+    res.json({ success: true });
+  } else {
+    res.status(400).json({ success: false });
+  }
 };
 
 module.exports = {
-    createPayment,
-    paymentSuccess,
+  createOrder,
+  verifyPayment,
 };

@@ -1,24 +1,5 @@
 const sessionService = require('../services/sessionService');
 
-// // Get session details by session ID
-// const getSessionDetails = async (req, res) => {
-//   const { sessionId } = req.params; // Extract session ID from URL parameters
-
-//   try {
-//     const session = await sessionService.getSessionDetails(sessionId); // Call service to fetch session details
-//     res.status(200).json({
-//       success: true,
-//       data: session,
-//     });
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({
-//       success: false,
-//       message: error.message || 'Server error',
-//     });
-//   }
-// };
-
 // Create a new session
 const createorReserveSession = async (req, res) => {
   try {
@@ -196,10 +177,10 @@ const getAvailableSessionsForDate = async (req, res) => {
 // Controller for deleting a session
 const deleteSessionByDateTime = async (req, res) => {
   const { trainerId } = req.params;
-  const { dateTime } = req.body;
+  const { date, time } = req.body;
 
   try {
-    const deleted = await sessionService.deleteSessionByDateTime(trainerId, dateTime);
+    const deleted = await sessionService.deleteSessionByDateTime(trainerId, date, time);
 
     return res.status(200).json({
       success: true,
@@ -245,38 +226,58 @@ const getSessionsByTrainer = async (req, res) => {
 };
 
 
-const getPastSessionsByTrainer = async (req, res) => {
-  const { trainerId } = req.params;
-  const { date } = req.query;
-
-  // Ensure the date is valid
-  const parsedDate = Date.parse(date);
-
-  if (isNaN(parsedDate)) {
-    return res.status(400).json({
-      success: false,
-      message: 'Invalid date format. Please provide a valid date.',
-    });
-  }
-
+const getAllSlotsByDate = async (req, res) => {
   try {
-    const sessions = await sessionService.getPastSessionsByTrainer(trainerId, new Date(parsedDate));
+    const { date } = req.query;
+    if (!date) {
+      return res.status(400).json({ success: false, message: 'Date is required in query params' });
+    }
+
+    const slots = await sessionService.fetchAllSlotsByDate(date);
+    res.json({ success: true, data: slots });
+  } catch (error) {
+    console.error('Error in getAllSlotsByDate:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+const getSessionDetails = async (req, res) => {
+  try {
+    const sessionId = req.params.id;
+    const sessionDetails = await sessionService.getSessionDetails(sessionId);
     return res.status(200).json({
-      success: true,
-      data: sessions,
+      status: 'success',
+      data: sessionDetails,
     });
   } catch (error) {
-    console.error('❌ Error in getPastSessionsByTrainer:', error);
-    return res.status(500).json({
-      success: false,
+    return res.status(400).json({
+      status: 'error',
       message: error.message,
     });
   }
 };
 
+const mapUsersToPunchingBags = async (req, res) => {
+  const sessionId = req.params.sessionId;
+  const { mappings } = req.body;
+
+  if (!Array.isArray(mappings)) {
+    return res.status(400).json({ error: 'Mappings must be an array' });
+  }
+
+  try {
+    const updatedSession = await sessionService.mapUsersToPunchingBags(sessionId, mappings);
+    res.status(200).json({
+      message: 'User-punching bag mapping saved successfully',
+      session: updatedSession,
+    });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
 
 module.exports = {
-  // getSessionDetails,
+  getSessionDetails,
   createorReserveSession,
   getSessions,
   getUpcomingSessions,
@@ -286,5 +287,6 @@ module.exports = {
   getAvailableSessionsForDate,
   deleteSessionByDateTime,
   getSessionsByTrainer,
-  getPastSessionsByTrainer,
+  getAllSlotsByDate,
+  mapUsersToPunchingBags,
 };

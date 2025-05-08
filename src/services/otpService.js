@@ -1,12 +1,24 @@
 const otpGenerator = require('otp-generator');
-const twilio = require('twilio');
 const User = require('../models/User');
-const Otp = require('../models/Otp'); // Create an OTP model
+const axios = require('axios');
+const jwt = require('jsonwebtoken');
+
 require('dotenv').config();
 
-// Twilio config (Use your Twilio credentials)
-const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
-const TWILIO_PHONE_NUMBER = process.env.TWILIO_PHONE_NUMBER;
+const API_KEY = process.env.API_KEY;
+const JWT_SECRET = process.env.JWT_SECRET;
+
+const sendOtpForSignup = async (phone) => {
+    const existingUser = await User.findOne({ phone });
+    if (existingUser) {
+      throw new Error('Phone number already registered');
+    }
+  
+    const url = `https://2factor.in/API/V1/${API_KEY}/SMS/${phone}/AUTOGEN`;
+    const response = await axios.get(url);
+    return response.data;
+  };
+  
 
 // Generate and send OTP
 const sendOTP = async (phone) => {
@@ -17,46 +29,76 @@ const sendOTP = async (phone) => {
     }
 
     // Generate OTP
-    const otp = otpGenerator.generate(6, { digits: true, alphabets: false, upperCase: false, specialChars: false });
-
-    // Save OTP in DB (with expiry)
-    await Otp.create({ phone, otp, expiresAt: Date.now() + 300000 }); // Expires in 5 minutes
-
-    // Send OTP via Twilio
-    await client.messages.create({
-        body: `Your OTP for login is ${otp}. It is valid for 5 minutes.`,
-        from: TWILIO_PHONE_NUMBER,
-        to: phone
-    });
-
-    return { message: "OTP sent successfully" };
+    const url = `https://2factor.in/API/V1/${API_KEY}/SMS/${phone}/AUTOGEN`;
+    const response = await axios.get(url);
+    return response.data;
 };
 
-const verifyOTP = async (phone, otp) => {
-    const otpRecord = await Otp.findOne({ phone }).sort({ createdAt: -1 });
 
-    if (!otpRecord || otpRecord.otp !== otp) {
-        throw new Error("Invalid or expired OTP.");
-    }
-
-    // Find user
+const verifyOTP = async (sessionId, otp, phone) => {
+    
+    const url = `https://2factor.in/API/V1/${API_KEY}/SMS/VERIFY/${sessionId}/${otp}`;
+    const response = await axios.get(url);
     const user = await User.findOne({ phone });
+
     if (!user) {
-        throw new Error("User not found.");
-    }
+        return {
+          Status: 'Failure',
+          message: 'User not found',
+        };
+      }
 
-    // 🔥 Debugging step - Log user details
-    console.log("User found:", user);
-
-    // If username is required but missing, handle gracefully
-    if (!user.username) {
-        throw new Error("Username is required but missing.");
-    }
-
-    // Generate JWT
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-
-    return { token, user };
+    if (response.data.Status === 'Success') {
+        // You can use more fields if you want (like phone number from DB)
+        const payload = {
+          sessionId, // Or phone number if available
+          verifiedAt: new Date(),
+        };
+    
+        const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '365d' });
+    
+        return {
+          Status: 'Success',
+          token,
+          user: {
+            _id: user.id,
+            phone: user.phone,
+            name: user.name,
+          },
+        };
+      } else {
+        return {
+          Status: 'Failure',
+          message: 'Invalid OTP',
+        };
+      }
 };
 
-module.exports = { sendOTP, verifyOTP };
+const verifySignupOTP = async (sessionId, otp) => {
+    const url = `https://2factor.in/API/V1/${API_KEY}/SMS/VERIFY/${sessionId}/${otp}`;
+    const response = await axios.get(url);
+  
+    if (response.data.Status === 'Success') {
+      // Instead of user ID, sign something safe like sessionId or phone
+      const payload = {
+        sessionId,
+        verifiedAt: new Date(),
+      };
+  
+      const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '15m' }); // Short-lived token for signup
+  
+      return {
+        Status: 'Success',
+        message: 'OTP verified successfully',
+        token, // Now you have a token to authorize the upcoming registration
+      };
+    } else {
+      return {
+        Status: 'Failure',
+        message: response.data.Details || 'Invalid OTP',
+      };
+    }
+  };
+  
+
+module.exports = {sendOtpForSignup, sendOTP, verifyOTP, verifySignupOTP};

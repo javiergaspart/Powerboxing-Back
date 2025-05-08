@@ -57,13 +57,25 @@ const sessionSchema = new mongoose.Schema({
       ref: 'PunchingBag',
     },
   ],
+
+  userBagMapping: [
+    {
+      userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true,
+      },
+      punchingBagId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'PunchingBag',
+        required: true,
+      },
+    },
+  ],
+  
   isCompleted: {
     type: Boolean,
     default: false,
-  },
-  username: {
-    type: String,
-    default: '',
   },
   createdAt: {
     type: Date,

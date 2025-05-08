@@ -5,6 +5,29 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
+const authenticateToken = require('../middlewares/authMiddleware');
+
+const register = async ({ phone, email, username }) => {
+  console.log('[DEBUG] Register function called with:', { phone, email, username });
+
+  const existingUser = await User.findOne({ phone });
+  console.log('[DEBUG] User lookup result:', existingUser);
+
+  if (existingUser) {
+    console.log('[DEBUG] User already exists. Throwing error.');
+    throw new Error('User already exists');
+  }
+
+  const newUser = new User({ phone, email, username });
+  await newUser.save();
+  console.log('[DEBUG] New user saved:', newUser);
+
+  return {
+    message: 'User registered successfully',
+    user: newUser,
+  };
+};
+
 
 const registerUser = async (userData) => {
   const { username, email, password } = userData;
@@ -172,6 +195,7 @@ const resetPassword = async (token, newPassword) => {
 };
 
 module.exports = {
+  register,
   registerUser,
   loginUser,
   forgotPassword,
