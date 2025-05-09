@@ -16,8 +16,8 @@ const createorReserveSession = async (req, res) => {
     }
 
     // Check if necessary fields are present in the request body
-    const { userId, slotTimings, location, date } = req.body;
-    if (!userId || !slotTimings || !location || !date) {
+    const { userId, slotTiming, location, date } = req.body;
+    if (!userId || !slotTiming || !location || !date) {
       console.log('Missing required fields in request body:', req.body);
       return res.status(400).json({
         success: false,

@@ -9,16 +9,16 @@ const Trainer = require('../models/Trainer');
 const reserveOrCreateSession = async (req, res) => {
   console.log("Request received:", req);
 
-  const { userId, slotTimings, location, date, totalSlots, time } = req;
-  console.log("Checking session for slotTimings:", slotTimings, "Location:", location, "Date:", date);
+  const { userId, slotTiming, location, date, totalSlots, time } = req;
+  console.log("Checking session for slotTiming:", slotTiming, "Location:", location, "Date:", date);
 
-  const normalizedSlotTimings = slotTimings.replace(/\s/g, ' ').trim();
+  const normalizedSlotTimings = slotTiming.replace(/\s/g, ' ').trim();
   const normalizedLocation = location.trim();
   const normalizedDate = new Date(date); // Ensure correct date format
 
   try {
     // Check if a session with the same slot timings, location, and date exists
-    console.log("Searching for session with:", { slotTimings: normalizedSlotTimings, location: normalizedLocation, date: normalizedDate });
+    console.log("Searching for session with:", { slotTiming: normalizedSlotTimings, location: normalizedLocation, date: normalizedDate });
 
     const user = await User.findById(userId);
     if (!user) {
