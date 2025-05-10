@@ -1,10 +1,11 @@
-// src/routes/paymentRoutes.js
-
 const express = require('express');
 const router = express.Router();
 const paymentController = require('../controllers/paymentController');
 
+// Create a new Razorpay payment order
 router.post('/create-payment', paymentController.createPayment);
-router.post('/payment-success', paymentController.paymentSuccess); // Handle success notification
+
+// Verify Razorpay signature after successful payment
+router.post('/verify-payment', paymentController.verifyPayment);
 
 module.exports = router;
