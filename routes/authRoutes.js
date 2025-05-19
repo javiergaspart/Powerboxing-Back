@@ -1,18 +1,28 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const authController = require('../controllers/authController');
-const otpController = require('../controllers/otpController');
 
-// -------- AUTH ROUTES -------- //
-router.post('/register', authController.registerUser);            // Register user with phone/username
-router.post('/login', authController.login);                      // Login user (phone-based login)
-router.post('/forgot-password', authController.forgotPassword);   // Optional
-router.post('/reset-password', authController.resetPassword);     // Optional
+const {
+  login,
+  signup,
+  trainerLogin,
+  verifyOtp,
+} = require("../controllers/authController");
 
-// -------- OTP ROUTES -------- //
-router.post('/send-otp', otpController.sendOTP);                         // Send OTP (for login)
-router.post('/verify-otp', otpController.verifyOTP);                     // Verify OTP (for login)
-router.post('/send-otp/signup', otpController.sendOtpForSignup);        // Send OTP (for signup)
-router.post('/verify-otp/signup', otpController.verifySignupOTPController); // Verify OTP (signup)
+const { sendOTP } = require("../controllers/otpController");
+
+// ✅ USER LOGIN
+router.post("/auth/login", login);
+
+// ✅ TRAINER LOGIN
+router.post("/auth/login-trainer", trainerLogin);
+
+// ✅ SIGNUP (with trial session)
+router.post("/auth/signup", signup);
+
+// ✅ OTP: Send OTP
+router.post("/auth/send-otp/signup", sendOTP);
+
+// ✅ OTP: Verify OTP (dummy)
+router.post("/auth/verify-otp/signup", verifyOtp);
 
 module.exports = router;
