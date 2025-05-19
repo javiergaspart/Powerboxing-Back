@@ -12,12 +12,12 @@ router.post('/forgot-password', authController.forgotPassword);
 router.post('/reset-password', authController.resetPassword);
 router.post('/registerUser', authenticateToken, authController.registerUser);
 
-
-// OTP-based Phone Login Routes
+// ✅ OTP Routes
 router.post('/send-otp/signup', otpController.sendOtpForSignup);
 router.post('/send-otp-phone', otpController.sendOTP);
 router.post('/verify-otp-phone', otpController.verifyOTP);
-router.post('/verify-otp-phone/signup', otpController.verifySignupOTPController);
 
+// ✅ Fixed route to match CMD call
+router.post('/verify-otp/signup', otpController.verifySignupOTPController);
 
 module.exports = router;

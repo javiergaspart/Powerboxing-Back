@@ -109,7 +109,7 @@ To deploy the backend, use **Heroku, AWS, or Render**:
 ## 🔗 Useful Links
 
 - **Frontend Repo**: [FitBoxing Frontend](https://github.com/ShrutiVerma28/Frontend_Fitboxing/)
-- **Live Backend API**: `https://fitboxing.onrender.com`
+- **Live Backend API**: `https://powerboxing-backend.onrender.com`
 
 ---
 

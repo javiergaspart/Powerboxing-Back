@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken');
 
 require('dotenv').config();
 
-const API_KEY = process.env.API_KEY;
+const API_KEY = process.env.OTP_SECRET_KEY;
 const JWT_SECRET = process.env.JWT_SECRET;
 
 const sendOtpForSignup = async (phone) => {
