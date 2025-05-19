@@ -1,21 +1,20 @@
 const express = require('express');
 const router = express.Router();
+
 const authController = require('../controllers/authController');
-const otpController = require('../controllers/otpController');
-const authenticateToken = require('../middlewares/authMiddleware');
+const otpController = require('../controllers/otpController'); // ✅ THIS LINE FIXES THE CRASH
 
-// ✅ Standard routes
-router.post('/login', authController.login);
-router.post('/login-trainer', authController.trainerLogin);
-router.post('/signup', authController.signup);
-router.post('/forgot-password', authController.forgotPassword);
-router.post('/reset-password', authController.resetPassword);
-router.post('/registerUser', authenticateToken, authController.registerUser);
+// ---------------- USER LOGIN / SIGNUP ----------------
+router.post('/login', authController.login); // ✅ Phone-only user login
+router.post('/login-trainer', authController.loginTrainer); // ✅ Trainer login
 
-// ✅ OTP routes (all defined correctly in otpController.js)
-router.post('/send-otp/signup', otpController.sendOtpForSignup);
-router.post('/send-otp-phone', otpController.sendOTP);
-router.post('/verify-otp-phone', otpController.verifyOTP);
-router.post('/verify-otp/signup', otpController.verifySignupOTPController);
+// ---------------- OTP ROUTES ----------------
+router.post('/send-otp', otpController.sendOTP); // ✅ OTP for login
+router.post('/verify-otp', otpController.verifyOTP); // ✅ Verify OTP for login
+
+// ---------------- SIGNUP WITH OTP ----------------
+router.post('/send-otp/signup', otpController.sendOtpForSignup); // ✅ OTP for signup
+router.post('/verify-otp/signup', otpController.verifySignupOTP); // ✅ Verify OTP for signup
+router.post('/register', authController.registerUser); // ✅ Final signup call after OTP
 
 module.exports = router;
