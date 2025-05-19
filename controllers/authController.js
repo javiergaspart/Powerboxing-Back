@@ -2,56 +2,62 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const Trainer = require("../models/Trainer");
 
-// Generate JWT token
+// Generate JWT Token
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: "30d",
   });
 };
 
-// ✅ 1. User Login
+// ✅ USER LOGIN
 const login = async (req, res) => {
   try {
     const { phone } = req.body;
+
     if (!phone) {
       return res.status(400).json({ message: "Phone number is required" });
     }
 
     const user = await User.findOne({ phone });
+
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
     const token = generateToken(user._id);
-    return res.status(200).json({ user, token });
+
+    res.status(200).json({ user, token });
   } catch (error) {
     console.error("Login error:", error);
     res.status(500).json({ message: "Login failed" });
   }
 };
 
-// ✅ 2. Trainer Login
+// ✅ TRAINER LOGIN
 const trainerLogin = async (req, res) => {
   try {
     const { phone } = req.body;
+
     if (!phone) {
       return res.status(400).json({ message: "Phone number is required" });
     }
 
     const trainer = await Trainer.findOne({ phone });
+
     if (!trainer) {
       return res.status(404).json({ message: "Trainer not found" });
     }
 
     const token = generateToken(trainer._id);
-    return res.status(200).json({ trainer, token });
+
+    res.status(200).json({ trainer, token });
   } catch (error) {
     console.error("Trainer login error:", error);
     res.status(500).json({ message: "Trainer login failed" });
   }
 };
 
-// ✅ 3. Signup (Create trial user)
+// ✅ SIGNUP (with trial session)
 const signup = async (req, res) => {
   try {
     const { username, phone } = req.body;
@@ -60,8 +66,9 @@ const signup = async (req, res) => {
       return res.status(400).json({ message: "Username and phone required" });
     }
 
-    const existing = await User.findOne({ phone });
-    if (existing) {
+    const existingUser = await User.findOne({ phone });
+
+    if (existingUser) {
       return res.status(400).json({ message: "User already exists" });
     }
 
@@ -74,6 +81,7 @@ const signup = async (req, res) => {
     });
 
     const token = generateToken(newUser._id);
+
     res.status(201).json({ user: newUser, token });
   } catch (error) {
     console.error("Signup error:", error);
@@ -81,7 +89,7 @@ const signup = async (req, res) => {
   }
 };
 
-// ✅ 4. OTP Verify (for signup)
+// ✅ OTP VERIFY (dummy logic for now)
 const verifyOtp = async (req, res) => {
   try {
     const { phone } = req.body;
@@ -99,10 +107,9 @@ const verifyOtp = async (req, res) => {
   }
 };
 
-// ✅ EXPORT ALL FUNCTIONS
 module.exports = {
   login,
   trainerLogin,
   signup,
-  verifyOtp,
+  verifyOtp
 };
