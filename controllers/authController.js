@@ -21,15 +21,18 @@ const login = async (req, res) => {
     const user = await User.findOne({ phone });
 
     if (!user) {
+      console.warn(`[LOGIN] User not found for phone: ${phone}`);
       return res.status(404).json({ message: "User not found" });
     }
 
     const token = generateToken(user._id);
+
+    console.log("[LOGIN] User found, sending response.");
     return res.status(200).json({ user, token });
 
   } catch (error) {
-    console.error("Login error:", error);
-    return res.status(500).json({ message: "Login failed" });
+    console.error("[LOGIN ERROR]", error.stack || error);
+    return res.status(500).json({ message: "Login failed", error: error.message || "Unknown error" });
   }
 };
 
@@ -52,7 +55,7 @@ const trainerLogin = async (req, res) => {
     return res.status(200).json({ trainer, token });
 
   } catch (error) {
-    console.error("Trainer login error:", error);
+    console.error("[TRAINER LOGIN ERROR]", error.stack || error);
     return res.status(500).json({ message: "Trainer login failed" });
   }
 };
@@ -84,7 +87,7 @@ const signup = async (req, res) => {
     return res.status(201).json({ user: newUser, token });
 
   } catch (error) {
-    console.error("Signup error:", error);
+    console.error("[SIGNUP ERROR]", error.stack || error);
     return res.status(500).json({ message: "Signup failed" });
   }
 };
@@ -103,7 +106,7 @@ const verifyOtp = async (req, res) => {
     return res.status(200).json({ user, token });
 
   } catch (error) {
-    console.error("OTP verify error:", error);
+    console.error("[OTP VERIFY ERROR]", error.stack || error);
     return res.status(500).json({ message: "OTP verification failed" });
   }
 };
