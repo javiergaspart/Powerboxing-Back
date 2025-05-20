@@ -2,7 +2,7 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const Trainer = require("../models/Trainer");
 
-// Generate JWT Token
+// ✅ JWT Token Generator
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: "30d",
@@ -25,11 +25,11 @@ const login = async (req, res) => {
     }
 
     const token = generateToken(user._id);
+    return res.status(200).json({ user, token });
 
-    res.status(200).json({ user, token });
   } catch (error) {
     console.error("Login error:", error);
-    res.status(500).json({ message: "Login failed" });
+    return res.status(500).json({ message: "Login failed" });
   }
 };
 
@@ -49,15 +49,15 @@ const trainerLogin = async (req, res) => {
     }
 
     const token = generateToken(trainer._id);
+    return res.status(200).json({ trainer, token });
 
-    res.status(200).json({ trainer, token });
   } catch (error) {
     console.error("Trainer login error:", error);
-    res.status(500).json({ message: "Trainer login failed" });
+    return res.status(500).json({ message: "Trainer login failed" });
   }
 };
 
-// ✅ SIGNUP (with trial session)
+// ✅ USER SIGNUP
 const signup = async (req, res) => {
   try {
     const { username, phone } = req.body;
@@ -81,15 +81,15 @@ const signup = async (req, res) => {
     });
 
     const token = generateToken(newUser._id);
+    return res.status(201).json({ user: newUser, token });
 
-    res.status(201).json({ user: newUser, token });
   } catch (error) {
     console.error("Signup error:", error);
-    res.status(500).json({ message: "Signup failed" });
+    return res.status(500).json({ message: "Signup failed" });
   }
 };
 
-// ✅ OTP VERIFY (dummy logic for now)
+// ✅ OTP VERIFY (Dummy Logic)
 const verifyOtp = async (req, res) => {
   try {
     const { phone } = req.body;
@@ -100,10 +100,11 @@ const verifyOtp = async (req, res) => {
     }
 
     const token = generateToken(user._id);
-    res.status(200).json({ user, token });
+    return res.status(200).json({ user, token });
+
   } catch (error) {
     console.error("OTP verify error:", error);
-    res.status(500).json({ message: "OTP verification failed" });
+    return res.status(500).json({ message: "OTP verification failed" });
   }
 };
 
