@@ -4,15 +4,15 @@ const bcrypt = require('bcrypt');
 const userSchema = new mongoose.Schema({
   _id: {
     type: mongoose.Schema.Types.ObjectId,
-    auto: true, // Auto-generate ID
+    auto: true,
   },
   username: {
     type: String,
   },
   email: {
     type: String,
-    required: true,
-    unique: true,
+    required: false, // ✅ FIXED: make email optional
+    unique: false,
   },
   phone: {
     type: String,
@@ -49,24 +49,23 @@ const userSchema = new mongoose.Schema({
   resetPasswordExpires: { 
     type: Date,
   },
-  resetOTP: {  // Updated field
+  resetOTP: {
     type: String,
     default: null,
   },
-  otpExpires: { // Updated field
+  otpExpires: {
     type: Date,
     default: null,
   },
 });
 
-// **Hash password before saving**
+// ✅ Hash password if present
 userSchema.pre('save', async function (next) {
-  if (this.isModified('password')) {
+  if (this.isModified('password') && this.password) {
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
   }
   next();
 });
 
-const User = mongoose.model('User', userSchema);
-module.exports = User;
+module.exports = mongoose.model('User', userSchema);
