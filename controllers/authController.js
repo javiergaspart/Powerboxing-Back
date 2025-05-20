@@ -2,32 +2,22 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const Trainer = require("../models/Trainer");
 
-// ✅ JWT Token Generator
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: "30d",
   });
 };
 
-// ✅ USER LOGIN
+// ✅ User Login
 const login = async (req, res) => {
   try {
     const { phone } = req.body;
-
-    if (!phone) {
-      return res.status(400).json({ message: "Phone number is required" });
-    }
+    if (!phone) return res.status(400).json({ message: "Phone number is required" });
 
     const user = await User.findOne({ phone });
-
-    if (!user) {
-      console.warn(`[LOGIN] User not found for phone: ${phone}`);
-      return res.status(404).json({ message: "User not found" });
-    }
+    if (!user) return res.status(404).json({ message: "User not found" });
 
     const token = generateToken(user._id);
-
-    console.log("[LOGIN] User found, sending response.");
     return res.status(200).json({ user, token });
 
   } catch (error) {
@@ -36,20 +26,14 @@ const login = async (req, res) => {
   }
 };
 
-// ✅ TRAINER LOGIN
+// ✅ Trainer Login
 const trainerLogin = async (req, res) => {
   try {
     const { phone } = req.body;
-
-    if (!phone) {
-      return res.status(400).json({ message: "Phone number is required" });
-    }
+    if (!phone) return res.status(400).json({ message: "Phone number is required" });
 
     const trainer = await Trainer.findOne({ phone });
-
-    if (!trainer) {
-      return res.status(404).json({ message: "Trainer not found" });
-    }
+    if (!trainer) return res.status(404).json({ message: "Trainer not found" });
 
     const token = generateToken(trainer._id);
     return res.status(200).json({ trainer, token });
@@ -60,7 +44,7 @@ const trainerLogin = async (req, res) => {
   }
 };
 
-// ✅ USER SIGNUP
+// ✅ User Signup (no email)
 const signup = async (req, res) => {
   try {
     const { username, phone } = req.body;
@@ -70,15 +54,12 @@ const signup = async (req, res) => {
     }
 
     const existingUser = await User.findOne({ phone });
-
-    if (existingUser) {
-      return res.status(400).json({ message: "User already exists" });
-    }
+    if (existingUser) return res.status(400).json({ message: "User already exists" });
 
     const newUser = await User.create({
       username,
       phone,
-      type: "trial",
+      type: "boxer",               // ✅ required for frontend routing
       sessionBalance: 1,
       isNewCustomer: true,
     });
@@ -92,15 +73,13 @@ const signup = async (req, res) => {
   }
 };
 
-// ✅ OTP VERIFY (Dummy Logic)
+// ✅ OTP Verify
 const verifyOtp = async (req, res) => {
   try {
     const { phone } = req.body;
 
     const user = await User.findOne({ phone });
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
+    if (!user) return res.status(404).json({ message: "User not found" });
 
     const token = generateToken(user._id);
     return res.status(200).json({ user, token });
