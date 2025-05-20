@@ -11,18 +11,18 @@ const {
 const { sendOTP } = require("../controllers/otpController");
 
 // ✅ USER LOGIN
-router.post("/auth/login", login);
+router.post("/login", login);
 
 // ✅ TRAINER LOGIN
-router.post("/auth/login-trainer", trainerLogin);
+router.post("/login-trainer", trainerLogin);
 
 // ✅ SIGNUP (with trial session)
-router.post("/auth/signup", signup);
+router.post("/signup", signup);
 
 // ✅ OTP: Send OTP
-router.post("/auth/send-otp/signup", sendOTP);
+router.post("/send-otp/signup", sendOTP);
 
-// ✅ OTP: Verify OTP (dummy)
-router.post("/auth/verify-otp/signup", verifyOtp);
+// ✅ OTP: Verify OTP
+router.post("/verify-otp/signup", verifyOtp);
 
 module.exports = router;
