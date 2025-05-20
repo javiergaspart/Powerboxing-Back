@@ -1,78 +1,73 @@
-const OTP = require("../models/Otp");
 const User = require("../models/User");
-const bcrypt = require("bcryptjs");
-const otpGenerator = require("otp-generator");
+const OTP = require("../models/Otp");
 const jwt = require("jsonwebtoken");
 
-// Replace with your actual JWT secret
-const JWT_SECRET = process.env.JWT_SECRET || "your_jwt_secret_key";
-
-// Generate JWT token
-const generateToken = (userId) => {
-  return jwt.sign({ id: userId }, JWT_SECRET, {
-    expiresIn: "7d",
+// ✅ Token generation function
+const generateToken = (id) => {
+  return jwt.sign({ id }, process.env.JWT_SECRET, {
+    expiresIn: "30d",
   });
 };
 
-// ✅ 1. Send OTP for Signup
+// ✅ Send OTP
 exports.sendOtpSignup = async (req, res) => {
   const { phone } = req.body;
 
+  if (!phone) {
+    return res.status(400).json({ message: "Phone number is required" });
+  }
+
   try {
-    const otp = otpGenerator.generate(6, { upperCase: false, specialChars: false });
-    const hashedOtp = await bcrypt.hash(otp, 10);
-    const otpExpires = Date.now() + 5 * 60 * 1000; // 5 minutes
+    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
 
     await OTP.findOneAndUpdate(
       { phone },
-      { otp: hashedOtp, otpExpires },
+      {
+        phone,
+        code: otpCode,
+        expiresAt: new Date(Date.now() + 5 * 60 * 1000),
+      },
       { upsert: true, new: true }
     );
 
-    console.log(`[OTP DEBUG] OTP for ${phone} is ${otp}`);
+    console.log(`[OTP DEBUG] OTP for ${phone} is ${otpCode}`);
 
-    // Simulate SMS sending (e.g., console, or Twilio integration here)
     return res.status(200).json({ message: "OTP sent successfully" });
-  } catch (error) {
-    console.error("[SEND OTP ERROR]", error);
+  } catch (err) {
+    console.error("[SEND OTP ERROR]", err);
     return res.status(500).json({ message: "Failed to send OTP" });
   }
 };
 
-// ✅ 2. Verify OTP for Signup (NO user check here)
+// ✅ Verify OTP
 exports.verifyOtpSignup = async (req, res) => {
-  const { phone, otp } = req.body;
+  const { phone, code } = req.body;
+
+  if (!phone || !code) {
+    return res.status(400).json({ message: "Phone and code required" });
+  }
 
   try {
     const otpRecord = await OTP.findOne({ phone });
 
-    if (!otpRecord) {
-      return res.status(404).json({ message: "OTP not found" });
+    if (!otpRecord || otpRecord.code !== code || otpRecord.expiresAt < new Date()) {
+      return res.status(400).json({ message: "Invalid or expired OTP" });
     }
-
-    const isMatch = await bcrypt.compare(otp, otpRecord.otp);
-
-    if (!isMatch) {
-      return res.status(400).json({ message: "Invalid OTP" });
-    }
-
-    if (otpRecord.otpExpires < Date.now()) {
-      return res.status(400).json({ message: "OTP has expired" });
-    }
-
-    // Delete OTP after successful verification
-    await OTP.deleteOne({ phone });
 
     return res.status(200).json({ message: "OTP verified" });
-  } catch (error) {
-    console.error("[VERIFY OTP ERROR]", error);
-    return res.status(500).json({ message: "Server error during OTP verification" });
+  } catch (err) {
+    console.error("[VERIFY OTP ERROR]", err);
+    return res.status(500).json({ message: "OTP verification failed" });
   }
 };
 
-// ✅ 3. Signup User (after OTP is verified)
+// ✅ Sign-Up New User
 exports.signupUser = async (req, res) => {
-  const { username, phone } = req.body;
+  const { phone, username } = req.body;
+
+  if (!phone || !username) {
+    return res.status(400).json({ message: "Phone and username required" });
+  }
 
   try {
     const existing = await User.findOne({ phone });
@@ -93,8 +88,8 @@ exports.signupUser = async (req, res) => {
 
     const token = generateToken(user._id);
     return res.status(201).json({ user, token });
-  } catch (error) {
-    console.error("[SIGNUP USER ERROR]", error);
+  } catch (err) {
+    console.error("[SIGNUP ERROR]", err);
     return res.status(500).json({ message: "Signup failed" });
   }
 };

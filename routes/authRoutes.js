@@ -1,28 +1,14 @@
 const express = require("express");
 const router = express.Router();
+const authController = require("../controllers/authController");
+const otpController = require("../controllers/otpController");
 
-const {
-  login,
-  signup,
-  trainerLogin,
-  verifyOtp,
-} = require("../controllers/authController");
+// ✅ Auth
+router.post("/login", authController.login);
 
-const { sendOTP } = require("../controllers/otpController");
-
-// ✅ USER LOGIN
-router.post("/login", login);
-
-// ✅ TRAINER LOGIN
-router.post("/login-trainer", trainerLogin);
-
-// ✅ SIGNUP (with trial session)
-router.post("/signup", signup);
-
-// ✅ OTP: Send OTP
-router.post("/send-otp/signup", sendOTP);
-
-// ✅ OTP: Verify OTP
-router.post("/verify-otp/signup", verifyOtp);
+// ✅ OTP Flow
+router.post("/send-otp", otpController.sendOtpSignup);
+router.post("/verify-otp", otpController.verifyOtpSignup);
+router.post("/signup", otpController.signupUser); // ✅ MUST be defined
 
 module.exports = router;
