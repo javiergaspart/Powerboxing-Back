@@ -51,7 +51,7 @@ const trainerLogin = async (req, res) => {
       return res.status(400).json({ message: 'Phone number required' });
     }
 
-    console.log('[TrainerService] Login attempt for:', phone);
+    console.log(`[TrainerService] Login attempt for: ${phone || 'EMPTY VALUE'}`);
 
     const trainer = await Trainer.findOne({ phone: phone });
 
