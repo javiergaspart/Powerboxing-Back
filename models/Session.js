@@ -1,6 +1,10 @@
 const mongoose = require('mongoose');
 
 const sessionSchema = new mongoose.Schema({
+  slot: {
+    type: String,
+    required: true, // Add this to store 'YYYY.MM.DD:HHMM' format from frontend/backend
+  },
   date: {
     type: Date,
     required: true,
@@ -9,31 +13,25 @@ const sessionSchema = new mongoose.Schema({
     type: String,
     validate: {
       validator: function (v) {
-        // Remove special characters like non-breaking spaces
         v = v.replace(/\u202F|\u00A0/g, ' ').trim();
-  
         const match = v.match(/^(\d{1,2}):(\d{2}) (AM|PM)$/);
         if (!match) return false;
-  
+
         let [_, hourStr, minuteStr, period] = match;
         let hour = parseInt(hourStr, 10);
         let minute = parseInt(minuteStr, 10);
-  
+
         if (hour < 1 || hour > 12 || minute > 59) return false;
-  
-        // Convert to 24-hour format
+
         if (period === 'PM' && hour !== 12) hour += 12;
         if (period === 'AM' && hour === 12) hour = 0;
-  
+
         const timeInMinutes = hour * 60 + minute;
-        const minTime = 10 * 60; // 10:00 AM
-        const maxTime = 18 * 60; // 6:00 PM
-  
-        return timeInMinutes >= minTime && timeInMinutes <= maxTime;
+        return timeInMinutes >= 600 && timeInMinutes <= 1080;
       },
       message: '{VALUE} is not a valid time between 10:00 AM and 6:00 PM!',
     },
-  },  
+  },
   location: {
     type: String,
     required: true,
@@ -57,7 +55,6 @@ const sessionSchema = new mongoose.Schema({
       ref: 'PunchingBag',
     },
   ],
-
   userBagMapping: [
     {
       userId: {
@@ -72,7 +69,6 @@ const sessionSchema = new mongoose.Schema({
       },
     },
   ],
-  
   isCompleted: {
     type: Boolean,
     default: false,
@@ -92,5 +88,4 @@ const sessionSchema = new mongoose.Schema({
 });
 
 const Session = mongoose.model('Session', sessionSchema);
-
 module.exports = Session;

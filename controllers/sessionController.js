@@ -40,7 +40,7 @@ const saveTrainerSlots = async (req, res) => {
   }
 };
 
-// ✅ NEW: Controller to fetch trainer slots
+// ✅ Controller to fetch trainer slots
 const getTrainerSlots = async (req, res) => {
   try {
     const trainerId = req.params.trainerId;
@@ -50,8 +50,9 @@ const getTrainerSlots = async (req, res) => {
       const [datePart, timePart] = session.slot.split(':');
       const [year, month, day] = datePart.split('.').map(Number);
       const hour = parseInt(timePart.slice(0, 2));
+      const minute = parseInt(timePart.slice(2, 4));
 
-      return new Date(Date.UTC(year, month - 1, day, hour)).toISOString();
+      return new Date(Date.UTC(year, month - 1, day, hour, minute)).toISOString();
     });
 
     return res.status(200).json(slots);
@@ -60,7 +61,6 @@ const getTrainerSlots = async (req, res) => {
   }
 };
 
-// ✅ Export both functions
 module.exports = {
   saveTrainerSlots,
   getTrainerSlots,
