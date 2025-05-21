@@ -5,8 +5,8 @@ const authController = require('../controllers/authController');
 const otpController = require('../controllers/otpController');
 
 // OTP
-router.post('/send-otp', otpController.sendOtpSignup);
-router.post('/verify-otp', otpController.verifyOtpSignup);
+// router.post('/send-otp', otpController.sendOtpSignup);
+// router.post('/verify-otp', otpController.verifyOtpSignup);
 
 // Login
 router.post('/login', authController.login);
