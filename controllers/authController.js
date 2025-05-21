@@ -35,15 +35,16 @@ const userLogin = async (req, res) => {
 };
 
 // ---------------------------
-// TRAINER LOGIN (FULL DEBUG)
+// TRAINER LOGIN (FINAL FIXED)
 // ---------------------------
 const trainerLogin = async (req, res) => {
   try {
-    console.log('[DEBUG] HEADERS:', req.headers);       // ✅ Print headers
-    console.log('[DEBUG] BODY:', req.body);             // ✅ Print body
-    console.log('[DEBUG] BODY TYPE:', typeof req.body); // ✅ Print type of body
+    console.log('[DEBUG] HEADERS:', req.headers);
+    console.log('[DEBUG] BODY:', req.body);
+    console.log('[DEBUG] BODY TYPE:', typeof req.body);
 
-    const { phone } = req.body;
+    const phone = req.body.phone;
+    console.log('[DEBUG] Extracted phone:', phone);
 
     if (!phone) {
       console.log('[TrainerService] Login attempt for: undefined ❌');
@@ -52,8 +53,7 @@ const trainerLogin = async (req, res) => {
 
     console.log('[TrainerService] Login attempt for:', phone);
 
-
-    const trainer = await Trainer.findOne({ phone });
+    const trainer = await Trainer.findOne({ phone: phone });
 
     if (!trainer) {
       console.log('[TrainerService] Trainer lookup result: NOT FOUND ❌');
@@ -71,7 +71,7 @@ const trainerLogin = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('[TrainerService] Login error:', error);
+    console.error('[TrainerService] Login error:', error.message);
     res.status(500).json({ message: 'Internal Server Error' });
   }
 };
