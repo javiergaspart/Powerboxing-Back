@@ -1,6 +1,6 @@
 const sessionService = require('../services/sessionService');
 
-// ✅ Controller: Save trainer availability slots
+// ✅ Controller to handle trainer slot saving
 const saveTrainerSlots = async (req, res) => {
   try {
     const { trainerId, slots } = req.body;
@@ -15,6 +15,7 @@ const saveTrainerSlots = async (req, res) => {
     const sessionsToInsert = slots.map(iso => {
       const dt = new Date(iso);
       const formatted = `${dt.getFullYear()}.${(dt.getMonth() + 1).toString().padStart(2, '0')}.${dt.getDate().toString().padStart(2, '0')}:${dt.getHours().toString().padStart(2, '0')}${dt.getMinutes().toString().padStart(2, '0')}`;
+
       return {
         trainerId,
         slot: formatted,
@@ -38,7 +39,7 @@ const saveTrainerSlots = async (req, res) => {
   }
 };
 
-// ✅ FINAL EXPORT FIX
+// ✅ FINAL CRUCIAL LINE: EXPORT IT
 module.exports = {
   saveTrainerSlots,
 };
