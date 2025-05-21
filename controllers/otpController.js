@@ -29,7 +29,7 @@ exports.sendOtpSignup = async (req, res) => {
       { upsert: true, new: true }
     );
 
-    // ✅ DEBUG LOGS for Render
+    // ✅ RENDER LOG OUTPUT
     console.log("🧪 sendOtpSignup CALLED");
     console.log(`[OTP DEBUG] OTP for ${phone} is ${otpCode}`);
 
