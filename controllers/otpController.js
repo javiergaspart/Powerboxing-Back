@@ -1,78 +1,76 @@
-const User = require("../models/User");
-const OTP = require("../models/Otp");
-const jwt = require("jsonwebtoken");
+const axios = require('axios');
+const User = require('../models/User');
+const API_KEY = process.env.OTP_SECRET_KEY;
 
-const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: "30d",
-  });
-};
-
-// ✅ STEP 1: Send OTP
-exports.sendOtpSignup = async (req, res) => {
-  const { phone, username } = req.body;
-
-  if (!phone || !username) {
-    return res.status(400).json({ message: "Phone and username required" });
-  }
-
+// ✅ SEND OTP
+const sendOtpSignup = async (req, res) => {
   try {
-    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const { username, phone } = req.body;
 
-    await OTP.findOneAndUpdate(
-      { phone },
-      {
-        phone,
-        code: otpCode,
-        expiresAt: new Date(Date.now() + 5 * 60 * 1000), // 5 min expiry
-      },
-      { upsert: true, new: true }
+    if (!username || !phone) {
+      return res.status(400).json({ message: 'Phone and username required' });
+    }
+
+    const response = await axios.get(
+      `https://2factor.in/API/V1/${API_KEY}/SMS/${phone}/AUTOGEN`
     );
 
-    // ✅ RENDER LOG OUTPUT
-    console.log("🧪 sendOtpSignup CALLED");
-    console.log(`[OTP DEBUG] OTP for ${phone} is ${otpCode}`);
+    const sessionId = response.data.Details;
 
-    return res.status(200).json({ message: "OTP sent successfully" });
+    console.log(`[2FA DEBUG] OTP sent to ${phone} with sessionId: ${sessionId}`);
+
+    return res.status(200).json({ message: 'OTP sent successfully', sessionId });
   } catch (err) {
-    console.error("[SEND OTP ERROR]", err);
-    return res.status(500).json({ message: "Failed to send OTP" });
+    console.error('[2FA SEND ERROR]', err.response?.data || err.message);
+    return res.status(500).json({ message: 'Failed to send OTP' });
   }
 };
 
-// ✅ STEP 2: Verify OTP & Create User
-exports.verifyOtpSignup = async (req, res) => {
-  const { phone, code, username } = req.body;
-
-  if (!phone || !code || !username) {
-    return res.status(400).json({ message: "Phone, OTP code, and username required" });
-  }
-
+// ✅ VERIFY OTP
+const verifyOtpSignup = async (req, res) => {
   try {
-    const otpRecord = await OTP.findOne({ phone });
+    console.log('[VERIFY OTP DEBUG] Request body:', req.body);
 
-    if (!otpRecord || otpRecord.code !== code || otpRecord.expiresAt < new Date()) {
-      return res.status(400).json({ message: "Invalid or expired OTP" });
+    const { username, phone, otp, sessionId } = req.body;
+
+    if (!username || !phone || !otp || !sessionId) {
+      return res.status(400).json({ message: 'Phone, OTP code, username, and sessionId required' });
+    }
+
+    const verifyUrl = `https://2factor.in/API/V1/${API_KEY}/SMS/VERIFY/${sessionId}/${otp}`;
+    const response = await axios.get(verifyUrl);
+
+    if (response.data.Details !== 'OTP Matched') {
+      return res.status(400).json({ message: 'Invalid OTP' });
     }
 
     let user = await User.findOne({ phone });
 
     if (!user) {
-      user = await User.create({
+      user = new User({
         username,
         phone,
-        joinDate: new Date(),
         sessionBalance: 1,
-        newcomer: true,
-        type: "trial",
+        type: 'trial',
+        joinDate: new Date(),
       });
+
+      await user.save();
+      console.log(`[VERIFY OTP] New user created: ${username}`);
+    } else {
+      console.log(`[VERIFY OTP] Existing user found: ${username}`);
     }
 
-    const token = generateToken(user._id);
+    const token = 'mock_token'; // 🔒 Replace with JWT if needed
 
     return res.status(200).json({ user, token });
   } catch (err) {
-    console.error("[VERIFY OTP ERROR]", err);
-    return res.status(500).json({ message: "OTP verification + signup failed" });
+    console.error('[2FA VERIFY ERROR]', err.response?.data || err.message);
+    return res.status(500).json({ message: 'OTP verification failed' });
   }
+};
+
+module.exports = {
+  sendOtpSignup,
+  verifyOtpSignup,
 };
