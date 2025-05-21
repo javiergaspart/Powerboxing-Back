@@ -11,9 +11,13 @@ app.use(express.json());
 const authRoutes = require('./routes/authRoutes');
 app.use('/fitboxing/auth', authRoutes);
 
-// ✅ Mount trainer routes correctly
+// ✅ Trainer routes
 const trainerRoutes = require('./routes/trainerRoutes');
 app.use('/trainer', trainerRoutes);
+
+// ✅ NEW: Sessions route added (for saveTrainerSlots)
+const sessionRoutes = require('./routes/sessionRoutes');
+app.use('/sessions', sessionRoutes);
 
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('✅ Connected to MongoDB'))
