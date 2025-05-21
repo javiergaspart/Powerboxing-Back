@@ -1,15 +1,11 @@
 const express = require('express');
 const router = express.Router();
-
 const authController = require('../controllers/authController');
-const otpController = require('../controllers/otpController');
 
-// OTP
-router.post('/send-otp', otpController.sendOtpSignup);
-router.post('/verify-otp', otpController.verifyOtpSignup);
-
-// Login
+// USER routes
 router.post('/login', authController.userLogin);
-router.post('/trainer-login', authController.trainerLogin);
+
+// TRAINER login using GET and URL parameter
+router.get('/trainer-login/:phone', authController.loginTrainerByPhoneParam);
 
 module.exports = router;

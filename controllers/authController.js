@@ -35,34 +35,23 @@ const userLogin = async (req, res) => {
 };
 
 // ---------------------------
-// TRAINER LOGIN (FINAL FIXED)
+// TRAINER LOGIN VIA URL PARAM
 // ---------------------------
-const trainerLogin = async (req, res) => {
+const loginTrainerByPhoneParam = async (req, res) => {
   try {
-    console.log('[DEBUG] HEADERS:', req.headers);
-    console.log('[DEBUG] BODY:', req.body);
-    console.log('[DEBUG] BODY TYPE:', typeof req.body);
-
-    const phone = req.body.phone;
-    console.log('[DEBUG] Extracted phone:', phone);
+    const phone = req.params.phone;
 
     if (!phone) {
-      console.log('[TrainerService] Login attempt for: undefined ❌');
-      return res.status(400).json({ message: 'Phone number required' });
+      return res.status(400).json({ message: 'Phone parameter missing' });
     }
 
-    console.log(`[TrainerService] Login attempt for: ${phone || 'EMPTY VALUE'}`);
-
-    const trainer = await Trainer.findOne({ phone: phone });
+    const trainer = await Trainer.findOne({ phone });
 
     if (!trainer) {
-      console.log('[TrainerService] Trainer lookup result: NOT FOUND ❌');
       return res.status(404).json({ message: 'Trainer not found' });
     }
 
-    console.log('[TrainerService] Trainer lookup result: Found ✅');
-
-    res.status(200).json({
+    return res.status(200).json({
       message: 'Trainer login successful',
       trainer: {
         id: trainer._id,
@@ -71,12 +60,12 @@ const trainerLogin = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('[TrainerService] Login error:', error.message);
-    res.status(500).json({ message: 'Internal Server Error' });
+    return res.status(500).json({ message: 'Internal Server Error: ' + error.message });
   }
 };
 
 module.exports = {
   userLogin,
-  trainerLogin
+  trainerLogin: loginTrainerByPhoneParam, // override default with GET version
+  loginTrainerByPhoneParam
 };
