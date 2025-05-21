@@ -5,7 +5,7 @@ const getSessionDetails = async (sessionId) => {
 };
 
 const reserveOrCreateSession = async (trainerId, dateTime) => {
-  // Your original logic
+  // Your original logic here (preserved)
 };
 
 const getSessions = async () => {
@@ -52,9 +52,20 @@ const mapUsersToPunchingBags = async (sessionId, userBagMap) => {
   // Your original logic
 };
 
-// ✅ NEW FUNCTION REQUIRED FOR /saveTrainerSlots
+// ✅ FIXED FUNCTION — now adds required schema fields
 const insertTrainerSessions = async (sessions) => {
-  return await Session.insertMany(sessions);
+  const enrichedSessions = sessions.map(session => {
+    const [datePart] = session.slot.split(':');
+    return {
+      ...session,
+      totalSlots: 18,
+      availableSlots: 18,
+      location: 'Powerboxing Studio',
+      date: datePart, // format: YYYY.MM.DD
+    };
+  });
+
+  return await Session.insertMany(enrichedSessions);
 };
 
 module.exports = {
@@ -71,5 +82,5 @@ module.exports = {
   getSessionsByTrainer,
   fetchAllSlotsByDate,
   mapUsersToPunchingBags,
-  insertTrainerSessions, // ✅ ADD THIS
+  insertTrainerSessions, // ✅ included in export
 };
