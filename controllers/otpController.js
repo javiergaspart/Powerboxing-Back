@@ -61,9 +61,16 @@ const verifyOtpSignup = async (req, res) => {
       console.log(`[VERIFY OTP] Existing user found: ${username}`);
     }
 
-    const token = 'mock_token'; // 🔒 Replace with JWT if needed
+    const jwt = require('jsonwebtoken');
 
-    return res.status(200).json({ user, token });
+const token = jwt.sign(
+  { id: user._id },
+  process.env.JWT_SECRET_KEY,
+  { expiresIn: '7d' }
+);
+
+return res.status(200).json({ user, token });
+
   } catch (err) {
     console.error('[2FA VERIFY ERROR]', err.response?.data || err.message);
     return res.status(500).json({ message: 'OTP verification failed' });
