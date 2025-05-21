@@ -11,6 +11,10 @@ app.use(express.json());
 const authRoutes = require('./routes/authRoutes');
 app.use('/fitboxing/auth', authRoutes);
 
+// ✅ Mount trainer routes correctly
+const trainerRoutes = require('./routes/trainerRoutes');
+app.use('/trainer', trainerRoutes);
+
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('✅ Connected to MongoDB'))
   .catch((err) => console.error('❌ MongoDB connection error:', err));
