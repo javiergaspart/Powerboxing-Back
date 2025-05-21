@@ -39,17 +39,24 @@ const userLogin = async (req, res) => {
 // ---------------------------
 const trainerLogin = async (req, res) => {
   try {
-    console.log('[DEBUG] Received request body:', req.body); // Debug added
-
+    console.log('[DEBUG] BODY:', req.body); // 👈 Final debug
     const { phone } = req.body;
+
     if (!phone) {
+      console.log('[TrainerService] Login attempt for: undefined');
       return res.status(400).json({ message: 'Phone number required' });
     }
 
+    console.log(`[TrainerService] Login attempt for: ${phone}`);
+
     const trainer = await Trainer.findOne({ phone });
+
     if (!trainer) {
+      console.log('[TrainerService] Trainer lookup result: NOT FOUND ❌');
       return res.status(404).json({ message: 'Trainer not found' });
     }
+
+    console.log('[TrainerService] Trainer lookup result: Found ✅');
 
     res.status(200).json({
       message: 'Trainer login successful',
@@ -60,7 +67,7 @@ const trainerLogin = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('[TRAINER LOGIN DEBUG] Error:', error);
+    console.error('[TrainerService] Login error:', error);
     res.status(500).json({ message: 'Internal Server Error' });
   }
 };
