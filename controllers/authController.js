@@ -35,15 +35,18 @@ const userLogin = async (req, res) => {
 };
 
 // ---------------------------
-// TRAINER LOGIN
+// TRAINER LOGIN (FULL DEBUG)
 // ---------------------------
 const trainerLogin = async (req, res) => {
   try {
-    console.log('[DEBUG] BODY:', req.body); // 👈 Final debug
+    console.log('[DEBUG] HEADERS:', req.headers);       // ✅ Print headers
+    console.log('[DEBUG] BODY:', req.body);             // ✅ Print body
+    console.log('[DEBUG] BODY TYPE:', typeof req.body); // ✅ Print type of body
+
     const { phone } = req.body;
 
     if (!phone) {
-      console.log('[TrainerService] Login attempt for: undefined');
+      console.log('[TrainerService] Login attempt for: undefined ❌');
       return res.status(400).json({ message: 'Phone number required' });
     }
 
