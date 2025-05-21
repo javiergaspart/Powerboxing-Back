@@ -1,83 +1,46 @@
 const axios = require('axios');
+const jwt = require('jsonwebtoken');
 const User = require('../models/User');
-const API_KEY = process.env.OTP_SECRET_KEY;
 
-// ✅ SEND OTP
-const sendOtpSignup = async (req, res) => {
+exports.verifyOtpSignup = async (req, res) => {
   try {
-    const { username, phone } = req.body;
-
-    if (!username || !phone) {
-      return res.status(400).json({ message: 'Phone and username required' });
-    }
-
-    const response = await axios.get(
-      `https://2factor.in/API/V1/${API_KEY}/SMS/${phone}/AUTOGEN`
-    );
-
-    const sessionId = response.data.Details;
-
-    console.log(`[2FA DEBUG] OTP sent to ${phone} with sessionId: ${sessionId}`);
-
-    return res.status(200).json({ message: 'OTP sent successfully', sessionId });
-  } catch (err) {
-    console.error('[2FA SEND ERROR]', err.response?.data || err.message);
-    return res.status(500).json({ message: 'Failed to send OTP' });
-  }
-};
-
-// ✅ VERIFY OTP
-const verifyOtpSignup = async (req, res) => {
-  try {
-    console.log('[VERIFY OTP DEBUG] Request body:', req.body);
-
     const { username, phone, otp, sessionId } = req.body;
+
+    console.log(`VERIFY OTP DEBUG: name=${username} | phone=${phone} | otp=${otp} | sessionId=${sessionId}`);
 
     if (!username || !phone || !otp || !sessionId) {
       return res.status(400).json({ message: 'Phone, OTP code, username, and sessionId required' });
     }
 
-    const verifyUrl = `https://2factor.in/API/V1/${API_KEY}/SMS/VERIFY/${sessionId}/${otp}`;
-    const response = await axios.get(verifyUrl);
+    const verifyUrl = `https://2factor.in/API/V1/${process.env.TWOFACTOR_API_KEY}/SMS/VERIFY/${sessionId}/${otp}`;
+    const verifyResponse = await axios.get(verifyUrl);
+    console.log('✅ 2Factor VERIFY response:', verifyResponse.data);
 
-    if (response.data.Details !== 'OTP Matched') {
-      return res.status(400).json({ message: 'Invalid OTP' });
+    if (verifyResponse.data.Status !== 'Success') {
+      return res.status(401).json({ message: 'OTP verification failed' });
     }
 
+    // Create new user (or return existing if needed)
     let user = await User.findOne({ phone });
-
     if (!user) {
       user = new User({
         username,
         phone,
+        joinDate: new Date(),
         sessionBalance: 1,
         type: 'trial',
-        joinDate: new Date(),
+        newcomer: true,
       });
-
       await user.save();
-      console.log(`[VERIFY OTP] New user created: ${username}`);
-    } else {
-      console.log(`[VERIFY OTP] Existing user found: ${username}`);
     }
 
-    const jwt = require('jsonwebtoken');
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET_KEY, {
+      expiresIn: '7d',
+    });
 
-const token = jwt.sign(
-  { id: user._id },
-  process.env.JWT_SECRET_KEY,
-  { expiresIn: '7d' }
-);
-
-return res.status(200).json({ user, token });
-
-  } catch (err) {
-    console.error('[2FA VERIFY ERROR]', err.response?.data || err.message);
-    return res.status(500).json({ message: 'OTP verification failed' });
+    return res.status(200).json({ user, token });
+  } catch (error) {
+    console.error('[VERIFY OTP ERROR]', error.message || error);
+    res.status(500).json({ message: 'Verification failed', error: error.message });
   }
-};
-
-module.exports = {
-  sendOtpSignup,
-  verifyOtpSignup,
 };
