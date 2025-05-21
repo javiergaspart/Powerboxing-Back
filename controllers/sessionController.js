@@ -1,4 +1,6 @@
-// Controller function to save trainer slots (new structure using slots[])
+const sessionService = require('../services/sessionService');
+
+// ✅ Controller: Save trainer availability slots
 const saveTrainerSlots = async (req, res) => {
   try {
     const { trainerId, slots } = req.body;
@@ -13,7 +15,6 @@ const saveTrainerSlots = async (req, res) => {
     const sessionsToInsert = slots.map(iso => {
       const dt = new Date(iso);
       const formatted = `${dt.getFullYear()}.${(dt.getMonth() + 1).toString().padStart(2, '0')}.${dt.getDate().toString().padStart(2, '0')}:${dt.getHours().toString().padStart(2, '0')}${dt.getMinutes().toString().padStart(2, '0')}`;
-
       return {
         trainerId,
         slot: formatted,
@@ -21,7 +22,6 @@ const saveTrainerSlots = async (req, res) => {
       };
     });
 
-    // Replace this with your actual MongoDB insert logic
     const result = await sessionService.insertTrainerSessions(sessionsToInsert);
 
     return res.status(200).json({
@@ -36,4 +36,9 @@ const saveTrainerSlots = async (req, res) => {
       error: error.message,
     });
   }
+};
+
+// ✅ FINAL EXPORT FIX
+module.exports = {
+  saveTrainerSlots,
 };
