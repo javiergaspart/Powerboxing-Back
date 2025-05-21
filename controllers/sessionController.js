@@ -1,6 +1,7 @@
 const sessionService = require('../services/sessionService');
+const Session = require('../models/Session');
 
-// ✅ Controller to handle trainer slot saving
+// ✅ Controller to save trainer availability
 const saveTrainerSlots = async (req, res) => {
   try {
     const { trainerId, slots } = req.body;
@@ -39,7 +40,28 @@ const saveTrainerSlots = async (req, res) => {
   }
 };
 
-// ✅ FINAL CRUCIAL LINE: EXPORT IT
+// ✅ NEW: Controller to fetch trainer slots
+const getTrainerSlots = async (req, res) => {
+  try {
+    const trainerId = req.params.trainerId;
+    const sessions = await Session.find({ trainerId });
+
+    const slots = sessions.map(session => {
+      const [datePart, timePart] = session.slot.split(':');
+      const [year, month, day] = datePart.split('.').map(Number);
+      const hour = parseInt(timePart.slice(0, 2));
+
+      return new Date(Date.UTC(year, month - 1, day, hour)).toISOString();
+    });
+
+    return res.status(200).json(slots);
+  } catch (error) {
+    return res.status(500).json({ error: 'Failed to fetch trainer slots' });
+  }
+};
+
+// ✅ Export both functions
 module.exports = {
   saveTrainerSlots,
+  getTrainerSlots,
 };
