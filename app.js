@@ -4,21 +4,19 @@ const mongoose = require('mongoose');
 require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 10000;
 
+// ✅ Middleware
 app.use(cors());
-app.use(express.json()); // ✅ Required for req.body
+app.use(express.json());
 
+// ✅ Routes
 const authRoutes = require('./routes/authRoutes');
 app.use('/fitboxing/auth', authRoutes);
 
+// ✅ MongoDB connection
 mongoose.connect(process.env.MONGODB_URI)
-  .then(() => {
-    app.listen(PORT, () => {
-      console.log(`Server is running on http://0.0.0.0:${PORT}`);
-      console.log('Successfully connected to mongoDB');
-    });
-  })
-  .catch((err) => {
-    console.error('DB connection error:', err);
-  });
+  .then(() => console.log('✅ Connected to MongoDB'))
+  .catch((err) => console.error('MongoDB error:', err));
+
+// ✅ Export app for server.js
+module.exports = app;
