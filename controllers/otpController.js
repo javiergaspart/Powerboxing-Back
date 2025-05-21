@@ -1,59 +1,62 @@
 const axios = require('axios');
 const User = require('../models/User');
 
-const verifyOtp = async (req, res) => {
-  const { username, phone, otp, sessionId } = req.body;
+const OTP_API_KEY = process.env.OTP_SECRET_KEY;
+const TWO_FACTOR_BASE = 'https://2factor.in/API/V1';
 
-  console.log(`[VERIFY OTP DEBUG] name=${username} | phone=${phone} | otp=${otp} | sessionId=${sessionId}`);
+exports.sendOtpSignup = async (req, res) => {
+  const { phone, username } = req.body;
 
-  if (!username || !phone || !otp || !sessionId) {
-    console.error('[VERIFY OTP ERROR] Missing fields');
+  if (!phone || !username) {
+    return res.status(400).json({ message: 'Phone and username required' });
+  }
+
+  try {
+    const url = `${TWO_FACTOR_BASE}/${OTP_API_KEY}/SMS/${phone}/AUTOGEN`;
+    const response = await axios.get(url);
+    const { Status, Details } = response.data;
+
+    if (Status === 'Success') {
+      return res.status(200).json({ message: 'OTP sent successfully', sessionId: Details });
+    } else {
+      return res.status(400).json({ message: 'Failed to send OTP', error: response.data });
+    }
+  } catch (error) {
+    return res.status(500).json({ message: 'Error sending OTP', error: error.message });
+  }
+};
+
+exports.verifyOtpSignup = async (req, res) => {
+  const { phone, otp, username, sessionId } = req.body;
+
+  if (!phone || !otp || !username || !sessionId) {
     return res.status(400).json({ message: 'Phone, OTP code, sessionId, and username required' });
   }
 
   try {
-    const verifyResponse = await axios.get(
-      `https://2factor.in/API/V1/${process.env.TWO_FACTOR_API_KEY}/SMS/VERIFY/${sessionId}/${otp}`
-    );
+    const url = `${TWO_FACTOR_BASE}/${OTP_API_KEY}/SMS/VERIFY/${sessionId}/${otp}`;
+    const response = await axios.get(url);
+    const { Status } = response.data;
 
-    console.log('[VERIFY OTP DEBUG] 2Factor response:', verifyResponse.data);
-
-    if (verifyResponse.data.Status === 'Success') {
-      let user = await User.findOne({ phone });
-
-      if (!user) {
-        user = new User({
-          username,
-          phone,
-          joinDate: new Date(),
-          sessionBalance: 1,
-          type: 'trial',
-        });
-        await user.save();
-        console.log('[VERIFY OTP] New user created:', user._id);
-      } else {
-        console.log('[VERIFY OTP] Existing user:', user._id);
-      }
-
-      // ✅ Token can be added here if needed
-      return res.status(200).json({
-        message: 'OTP verified successfully',
-        user,
-        token: 'mock_token',
-      });
-    } else {
-      return res.status(400).json({
-        message: 'OTP verification failed',
-        error: verifyResponse.data.Details || 'Unknown error',
-      });
+    if (Status !== 'Success') {
+      return res.status(400).json({ message: 'OTP verification failed', error: response.data });
     }
-  } catch (err) {
-    console.error('[VERIFY OTP ERROR]', err.response?.data || err.message);
-    return res.status(500).json({
-      message: 'Server error during OTP verification',
-      error: err.response?.data || err.message,
-    });
+
+    let user = await User.findOne({ phone });
+
+    if (!user) {
+      user = new User({
+        username,
+        phone,
+        joinDate: new Date(),
+        newcomer: true,
+        sessionBalance: 1,
+      });
+      await user.save();
+    }
+
+    return res.status(200).json({ user, token: 'mock_token' });
+  } catch (error) {
+    return res.status(500).json({ message: 'Error verifying OTP', error: error.message });
   }
 };
-
-module.exports = { verifyOtp };
