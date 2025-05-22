@@ -4,7 +4,9 @@ const trainerController = require('../controllers/trainerController');
 
 router.post('/login', trainerController.loginTrainer);
 
-// Route to get past sessions for a specific trainer on a given date
+// ✅ Add this line to fix the issue
+router.get('/:trainerId/slots', trainerController.getTrainerSlotsForDate);
+
 router.get('/:trainerId/past-sessions', trainerController.getPastSessionsByTrainer);
 
 module.exports = router;
