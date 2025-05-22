@@ -36,7 +36,8 @@ exports.getSlotsForTrainerByDate = async (trainerId, dateStr) => {
   });
 
   return sessions.map(session => ({
-    time: moment(session.date).format('h:mm A')
+  slot: session.slot
+}));
   }));
 };
 
