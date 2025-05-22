@@ -14,6 +14,9 @@ const saveTrainerSlots = async (req, res) => {
     }
 
     const sessionsToInsert = slots.map(slotStr => {
+  const date = new Date(slotStr);
+  console.log("🔥 slotStr received:", slotStr);
+  console.log("🔥 parsed date object:", date);
       const date = new Date(slotStr); // ✅ Parse ISO 8601 string
 
       return {
