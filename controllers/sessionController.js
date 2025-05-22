@@ -13,14 +13,22 @@ const saveTrainerSlots = async (req, res) => {
       });
     }
 
-    const sessionsToInsert = slots.map(iso => {
-      const dt = new Date(iso);
-      const formatted = `${dt.getFullYear()}.${(dt.getMonth() + 1).toString().padStart(2, '0')}.${dt.getDate().toString().padStart(2, '0')}:${dt.getHours().toString().padStart(2, '0')}${dt.getMinutes().toString().padStart(2, '0')}`;
+    const sessionsToInsert = slots.map(slotStr => {
+      const [datePart, timePart] = slotStr.split(':');
+      const [year, month, day] = datePart.split('.').map(Number);
+      const hour = parseInt(timePart.slice(0, 2));
+      const minute = parseInt(timePart.slice(2, 4));
+
+      const date = new Date(Date.UTC(year, month - 1, day, hour, minute));
 
       return {
         trainerId,
-        slot: formatted,
+        slot: slotStr,
+        date: date,
         createdAt: new Date(),
+        availableSlots: 20,
+        totalSlots: 20,
+        location: "Powerboxing Studio",
       };
     });
 
