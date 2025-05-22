@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const sessionService = require('../services/sessionService');
 const Session = require('../models/Session');
 
@@ -51,14 +52,17 @@ const saveTrainerSlots = async (req, res) => {
 const getTrainerSlots = async (req, res) => {
   try {
     const trainerId = req.params.trainerId;
-    const sessions = await Session.find({ trainerId });
+    const sessions = await Session.find({
+      trainerId: new mongoose.Types.ObjectId(trainerId)
+    });
 
     const slots = sessions.map(session => {
-      return new Date(session.slot).toISOString(); // ✅ Convert to standard format
+      return new Date(session.slot).toISOString(); // ✅ Convert to ISO
     });
 
     return res.status(200).json(slots);
   } catch (error) {
+    console.error('❌ Failed to fetch trainer slots:', error);
     return res.status(500).json({ error: 'Failed to fetch trainer slots' });
   }
 };
