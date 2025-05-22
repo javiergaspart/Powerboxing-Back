@@ -52,16 +52,15 @@ const mapUsersToPunchingBags = async (sessionId, userBagMap) => {
   // Your original logic
 };
 
-// ✅ FIXED FUNCTION — now adds required schema fields
+// ✅ FIXED FUNCTION — no more overriding valid ISO Date
 const insertTrainerSessions = async (sessions) => {
   const enrichedSessions = sessions.map(session => {
-    const [datePart] = session.slot.split(':');
     return {
       ...session,
       totalSlots: 18,
       availableSlots: 18,
       location: 'Powerboxing Studio',
-      date: datePart, // format: YYYY.MM.DD
+      // ✅ 'date' field is preserved from controller (already a valid Date)
     };
   });
 
@@ -82,5 +81,5 @@ module.exports = {
   getSessionsByTrainer,
   fetchAllSlotsByDate,
   mapUsersToPunchingBags,
-  insertTrainerSessions, // ✅ included in export
+  insertTrainerSessions,
 };
