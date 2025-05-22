@@ -14,12 +14,7 @@ const saveTrainerSlots = async (req, res) => {
     }
 
     const sessionsToInsert = slots.map(slotStr => {
-      const [datePart, timePart] = slotStr.split(':');
-      const [year, month, day] = datePart.split('.').map(Number);
-      const hour = parseInt(timePart.slice(0, 2));
-      const minute = parseInt(timePart.slice(2, 4));
-
-      const date = new Date(Date.UTC(year, month - 1, day, hour, minute));
+      const date = new Date(slotStr); // ✅ Parse ISO 8601 string directly
 
       return {
         trainerId,
@@ -55,12 +50,7 @@ const getTrainerSlots = async (req, res) => {
     const sessions = await Session.find({ trainerId });
 
     const slots = sessions.map(session => {
-      const [datePart, timePart] = session.slot.split(':');
-      const [year, month, day] = datePart.split('.').map(Number);
-      const hour = parseInt(timePart.slice(0, 2));
-      const minute = parseInt(timePart.slice(2, 4));
-
-      return new Date(Date.UTC(year, month - 1, day, hour, minute)).toISOString();
+      return new Date(session.slot).toISOString(); // ✅ Handle ISO format directly
     });
 
     return res.status(200).json(slots);
