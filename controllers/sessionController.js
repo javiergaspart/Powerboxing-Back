@@ -28,3 +28,49 @@ const saveTrainerSlots = async (req, res) => {
         createdAt: new Date(),
         availableSlots: 20,
         totalSlots: 20,
+        location: "Powerboxing Studio",
+      };
+    });
+
+    const result = await sessionService.insertTrainerSessions(sessionsToInsert);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Sessions created successfully',
+      data: result,
+    });
+  } catch (error) {
+    console.error('Error in saveTrainerSlots:', error);
+    return res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+};
+
+// ✅ Controller to fetch trainer slots (safe version)
+const getTrainerSlots = async (req, res) => {
+  try {
+    const trainerId = req.params.trainerId;
+    const sessions = await Session.find({
+      trainerId: new mongoose.Types.ObjectId(trainerId)
+    });
+
+    const slots = sessions
+      .filter(session => {
+        const d = new Date(session.slot);
+        return d instanceof Date && !isNaN(d.getTime());
+      })
+      .map(session => new Date(session.slot).toISOString());
+
+    return res.status(200).json(slots);
+  } catch (error) {
+    console.error('❌ Failed to fetch trainer slots:', error);
+    return res.status(500).json({ error: 'Failed to fetch trainer slots' });
+  }
+};
+
+module.exports = {
+  saveTrainerSlots,
+  getTrainerSlots,
+};
