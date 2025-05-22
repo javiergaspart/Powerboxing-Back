@@ -35,63 +35,43 @@ exports.getSlotsForTrainerByDate = async (trainerId, dateStr) => {
     }
   });
 
+  // ✅ Return slot for each session (used in frontend calendar)
   return sessions.map(session => ({
-  slot: session.slot
-}));
+    slot: session.slot
   }));
 };
 
 exports.getPastSessionsByTrainer = async (trainerId, date) => {
   try {
-
     console.log("Fetching previous sessions");
     const now = new Date(); // Current time
     const inputDate = new Date(date); // Parse the input date
 
-    // Set the start of the day for the given date (00:00:00)
     const startOfDay = new Date(inputDate.setHours(0, 0, 0, 0));
-
-    // Set the end of the day for the given date (23:59:59.999)
     const endOfDay = new Date(inputDate.setHours(23, 59, 59, 999));
 
-    // If the provided date is today, only fetch sessions before the current time
     let endTime = endOfDay;
     if (now.toDateString() === inputDate.toDateString()) {
-      // If today, set endTime to the current time to ensure we don't include future sessions
       endTime = now;
     }
 
-    // Fetch sessions for the trainer within the calculated date range
     const sessions = await Session.find({
       trainerId,
-      date: { $gte: startOfDay, $lte: endTime }, // Sessions before current time for today, or all sessions for previous days
+      date: { $gte: startOfDay, $lte: endTime }
     });
 
-    console.log("Past sessions: " + sessions);
-
-     // Filter out future sessions (sessions that are still in the future)
     const pastSessions = sessions.filter(session => {
-      // Combine date with slotTiming to create a full date-time
       const [hours, minutes] = session.slotTiming.split(':');
       const [time, period] = minutes.split(' ');
       let hour = parseInt(hours);
-      if (period === 'PM' && hour !== 12) {
-        hour += 12; // Convert PM hour to 24-hour format
-      } else if (period === 'AM' && hour === 12) {
-        hour = 0; // Convert 12 AM to 00
-      }
+      if (period === 'PM' && hour !== 12) hour += 12;
+      else if (period === 'AM' && hour === 12) hour = 0;
 
-      // Set the time to the session date
       const sessionDateTime = new Date(session.date);
       sessionDateTime.setHours(hour, parseInt(time), 0, 0);
 
-      // Filter sessions that are in the past
       return sessionDateTime < now;
     });
-
-    console.log("Past sessions: ", pastSessions);
-
-    return pastSessions;
 
     return pastSessions;
   } catch (error) {
