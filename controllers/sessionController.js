@@ -14,15 +14,16 @@ const saveTrainerSlots = async (req, res) => {
     }
 
     const sessionsToInsert = slots.map(slotStr => {
-  const date = new Date(slotStr);
-  console.log("🔥 slotStr received:", slotStr);
-  console.log("🔥 parsed date object:", date);
       const date = new Date(slotStr); // ✅ Parse ISO 8601 string
+
+      // 🔥 Debug logs
+      console.log("🔥 slotStr received:", slotStr);
+      console.log("🔥 parsed date object:", date);
 
       return {
         trainerId,
-        slot: date.toISOString(),  // ✅ FIXED HERE: always store valid ISO string
-        date: date,
+        slot: date.toISOString(),  // ✅ Always save as ISO string
+        date: date,                // ✅ Full Date object
         createdAt: new Date(),
         availableSlots: 20,
         totalSlots: 20,
@@ -53,7 +54,7 @@ const getTrainerSlots = async (req, res) => {
     const sessions = await Session.find({ trainerId });
 
     const slots = sessions.map(session => {
-      return new Date(session.slot).toISOString(); // ✅ Handle ISO format correctly
+      return new Date(session.slot).toISOString(); // ✅ Convert to standard format
     });
 
     return res.status(200).json(slots);
