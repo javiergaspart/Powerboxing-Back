@@ -15,7 +15,7 @@ const saveTrainerSlots = async (req, res) => {
     }
 
     const sessionsToInsert = slots.map(slotStr => {
-      const date = new Date(slotStr); // ✅ Parse ISO 8601 string
+      const date = new Date(slotStr);
 
       // 🔥 Debug logs
       console.log("🔥 slotStr received:", slotStr);
@@ -23,51 +23,8 @@ const saveTrainerSlots = async (req, res) => {
 
       return {
         trainerId,
-        slot: date.toISOString(),  // ✅ Always save as ISO string
-        date: date,                // ✅ Full Date object
+        slot: date.toISOString(),
+        date: date,
         createdAt: new Date(),
         availableSlots: 20,
         totalSlots: 20,
-        location: "Powerboxing Studio",
-      };
-    });
-
-    const result = await sessionService.insertTrainerSessions(sessionsToInsert);
-
-    return res.status(200).json({
-      success: true,
-      message: 'Sessions created successfully',
-      data: result,
-    });
-  } catch (error) {
-    console.error('Error in saveTrainerSlots:', error);
-    return res.status(500).json({
-      success: false,
-      error: error.message,
-    });
-  }
-};
-
-// ✅ Controller to fetch trainer slots
-const getTrainerSlots = async (req, res) => {
-  try {
-    const trainerId = req.params.trainerId;
-    const sessions = await Session.find({
-      trainerId: new mongoose.Types.ObjectId(trainerId)
-    });
-
-    const slots = sessions.map(session => {
-      return new Date(session.slot).toISOString(); // ✅ Convert to ISO
-    });
-
-    return res.status(200).json(slots);
-  } catch (error) {
-    console.error('❌ Failed to fetch trainer slots:', error);
-    return res.status(500).json({ error: 'Failed to fetch trainer slots' });
-  }
-};
-
-module.exports = {
-  saveTrainerSlots,
-  getTrainerSlots,
-};
