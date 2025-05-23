@@ -6,7 +6,6 @@ const Session = require('../models/Session');
 const saveTrainerSlots = async (req, res) => {
   try {
     const { trainerId, slots } = req.body;
-
     if (!trainerId || !Array.isArray(slots) || slots.length === 0) {
       return res.status(400).json({
         success: false,
@@ -16,8 +15,6 @@ const saveTrainerSlots = async (req, res) => {
 
     const sessionsToInsert = slots.map(slotStr => {
       const date = new Date(slotStr);
-
-      // 🔥 Debug logs
       console.log("🔥 slotStr received:", slotStr);
       console.log("🔥 parsed date object:", date);
 
@@ -70,7 +67,7 @@ const getTrainerSlots = async (req, res) => {
   }
 };
 
-// ✅ Controller to fetch all available sessions (PUBLIC)
+// ✅ PUBLIC GET for all available sessions (used in TempHomeScreen)
 const getAllAvailableSessions = async (req, res) => {
   try {
     const sessions = await Session.find({});
@@ -81,8 +78,21 @@ const getAllAvailableSessions = async (req, res) => {
   }
 };
 
+// ✅ 🔥 ADD MISSING CONTROLLER HERE
+const getTrainerSessions = async (req, res) => {
+  try {
+    const trainerId = req.params.trainerId;
+    const sessions = await Session.find({ trainerId });
+    res.status(200).json(sessions);
+  } catch (error) {
+    console.error("❌ Error fetching trainer sessions:", error);
+    res.status(500).json({ message: "Failed to fetch trainer sessions" });
+  }
+};
+
 module.exports = {
   saveTrainerSlots,
   getTrainerSlots,
-  getAllAvailableSessions, // ✅ Required for public route
+  getAllAvailableSessions,
+  getTrainerSessions, // ✅ export it now!
 };
