@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const Session = require('../models/Session');
+const User = require('../models/User'); // ✅ Added
 
 // ✅ Get all available sessions for the temp homescreen
 const getAllAvailableSessions = async (req, res) => {
@@ -48,7 +49,7 @@ const createSession = async (req, res) => {
   }
 };
 
-// ✅ Book a session
+// ✅ Book a session with balance decrement
 const bookSession = async (req, res) => {
   const { sessionId, userId } = req.body;
   try {
@@ -56,11 +57,30 @@ const bookSession = async (req, res) => {
     if (!session) {
       return res.status(404).json({ error: 'Session not found' });
     }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    if (user.sessionBalance <= 0) {
+      return res.status(400).json({ error: 'Insufficient session balance' });
+    }
+
+    if (session.participants.includes(userId)) {
+      return res.status(400).json({ error: 'User already booked this session' });
+    }
+
     session.participants.push(userId);
     session.availableSlots = Math.max(0, session.availableSlots - 1);
     await session.save();
+
+    user.sessionBalance -= 1;
+    await user.save();
+
     res.status(200).json({ message: 'Session booked', session });
   } catch (err) {
+    console.error('❌ Error booking session:', err);
     res.status(500).json({ error: 'Failed to book session' });
   }
 };
@@ -90,7 +110,7 @@ const getUserBookings = async (req, res) => {
   }
 };
 
-// ✅ Save trainer slots (overwrites all previous ones)
+// ✅ Save trainer slots (overwrite mode)
 const saveTrainerSlots = async (req, res) => {
   const { trainerId, slots } = req.body;
 
@@ -120,7 +140,7 @@ const saveTrainerSlots = async (req, res) => {
   }
 };
 
-// ✅ Create or merge multiple sessions for a trainer (only adds new, keeps existing)
+// ✅ Merge-mode session creation
 const createMultipleSessions = async (req, res) => {
   const { trainerId, slots } = req.body;
 
@@ -166,5 +186,5 @@ module.exports = {
   getSessionDetails,
   getUserBookings,
   saveTrainerSlots,
-  createMultipleSessions // ✅ Added safely
+  createMultipleSessions
 };
