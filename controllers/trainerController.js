@@ -1,4 +1,5 @@
 const trainerService = require('../services/trainerService');
+const Trainer = require('../models/Trainer'); // ✅ Required for direct lookup
 
 exports.getTrainerSlotsForDate = async (req, res) => {
   const { trainerId } = req.params;
@@ -21,7 +22,6 @@ exports.getPastSessionsByTrainer = async (req, res) => {
   const { trainerId } = req.params;
   const { date } = req.query;
 
-  // Ensure the date is valid
   const parsedDate = Date.parse(date);
 
   if (isNaN(parsedDate)) {
@@ -53,5 +53,26 @@ exports.loginTrainer = async (req, res) => {
     res.status(200).json({ trainer });
   } catch (error) {
     res.status(400).json({ message: error.message });
+  }
+};
+
+// ✅ NEW: GET login route by phone for Flutter
+exports.trainerLogin = async (req, res) => {
+  const { phone } = req.params;
+  try {
+    const trainer = await Trainer.findOne({ phone });
+    if (!trainer) {
+      return res.status(404).json({ message: 'Trainer not found' });
+    }
+    res.status(200).json({
+      message: 'Trainer login successful',
+      trainer: {
+        id: trainer._id,
+        name: trainer.name,
+        phone: trainer.phone,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Error logging in trainer', error: error.message });
   }
 };
