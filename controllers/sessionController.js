@@ -90,7 +90,7 @@ const getUserBookings = async (req, res) => {
   }
 };
 
-// ✅ Save trainer slots
+// ✅ Save trainer slots (overwrites all previous ones)
 const saveTrainerSlots = async (req, res) => {
   const { trainerId, slots } = req.body;
 
@@ -120,6 +120,44 @@ const saveTrainerSlots = async (req, res) => {
   }
 };
 
+// ✅ Create or merge multiple sessions for a trainer (only adds new, keeps existing)
+const createMultipleSessions = async (req, res) => {
+  const { trainerId, slots } = req.body;
+
+  if (!trainerId || !Array.isArray(slots)) {
+    return res.status(400).json({ error: 'Trainer ID and slots required' });
+  }
+
+  try {
+    const bulkOps = slots.map(slot => ({
+      updateOne: {
+        filter: { trainer: new mongoose.Types.ObjectId(trainerId), slot },
+        update: {
+          $setOnInsert: {
+            trainer: new mongoose.Types.ObjectId(trainerId),
+            slot,
+            totalSlots: 18,
+            availableSlots: 18,
+            location: 'Hyderabad Studio',
+            participants: [],
+            userBagMapping: [],
+            punchingBags: [],
+            isCompleted: false,
+            date: slot.split(':')[0].replaceAll('.', '-'),
+          }
+        },
+        upsert: true
+      }
+    }));
+
+    await Session.bulkWrite(bulkOps);
+    res.status(200).json({ message: 'Sessions created/merged successfully' });
+  } catch (err) {
+    console.error('❌ createMultipleSessions error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 module.exports = {
   getAllAvailableSessions,
   getTrainerSessions,
@@ -128,4 +166,5 @@ module.exports = {
   getSessionDetails,
   getUserBookings,
   saveTrainerSlots,
+  createMultipleSessions // ✅ Added safely
 };
