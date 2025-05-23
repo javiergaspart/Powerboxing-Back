@@ -1,98 +1,37 @@
-const mongoose = require('mongoose');
-const sessionService = require('../services/sessionService');
-const Session = require('../models/Session');
+// controllers/sessionController.js
 
-// ✅ Controller to save trainer availability
-const saveTrainerSlots = async (req, res) => {
-  try {
-    const { trainerId, slots } = req.body;
-    if (!trainerId || !Array.isArray(slots) || slots.length === 0) {
-      return res.status(400).json({
-        success: false,
-        error: 'Missing required fields in the request body!',
-      });
-    }
-
-    const sessionsToInsert = slots.map(slotStr => {
-      const date = new Date(slotStr);
-      console.log("🔥 slotStr received:", slotStr);
-      console.log("🔥 parsed date object:", date);
-
-      return {
-        trainerId,
-        slot: date.toISOString(),
-        date: date,
-        createdAt: new Date(),
-        availableSlots: 20,
-        totalSlots: 20,
-        location: "Powerboxing Studio",
-      };
-    });
-
-    const result = await sessionService.insertTrainerSessions(sessionsToInsert);
-
-    return res.status(200).json({
-      success: true,
-      message: 'Sessions created successfully',
-      data: result,
-    });
-  } catch (error) {
-    console.error('Error in saveTrainerSlots:', error);
-    return res.status(500).json({
-      success: false,
-      error: error.message,
-    });
-  }
+// GET /fitboxing/sessions/available
+exports.getAllAvailableSessions = (req, res) => {
+  console.log("➡️ GET /fitboxing/sessions/available");
+  res.status(200).json({ message: 'GET all available sessions (temp homescreen)' });
 };
 
-// ✅ Controller to fetch trainer slots
-const getTrainerSlots = async (req, res) => {
-  try {
-    const trainerId = req.params.trainerId;
-    const sessions = await Session.find({
-      trainerId: new mongoose.Types.ObjectId(trainerId)
-    });
-
-    const slots = sessions
-      .filter(session => {
-        const d = new Date(session.slot);
-        return d instanceof Date && !isNaN(d.getTime());
-      })
-      .map(session => new Date(session.slot).toISOString());
-
-    return res.status(200).json(slots);
-  } catch (error) {
-    console.error('❌ Failed to fetch trainer slots:', error);
-    return res.status(500).json({ error: 'Failed to fetch trainer slots' });
-  }
+// GET /fitboxing/sessions/trainer/:trainerId/slots
+exports.getTrainerSessions = (req, res) => {
+  console.log(`➡️ GET /fitboxing/sessions/trainer/${req.params.trainerId}/slots`);
+  res.status(200).json({ message: 'GET sessions created by a trainer' });
 };
 
-// ✅ PUBLIC GET for all available sessions (used in TempHomeScreen)
-const getAllAvailableSessions = async (req, res) => {
-  try {
-    const sessions = await Session.find({});
-    res.status(200).json(sessions);
-  } catch (error) {
-    console.error("❌ Error fetching sessions:", error);
-    res.status(500).json({ message: "Failed to fetch sessions" });
-  }
+// POST /fitboxing/sessions/trainer/:trainerId/create
+exports.createSession = (req, res) => {
+  console.log(`➡️ POST /fitboxing/sessions/trainer/${req.params.trainerId}/create`);
+  res.status(201).json({ message: 'POST create a session by trainer' });
 };
 
-// ✅ 🔥 ADD MISSING CONTROLLER HERE
-const getTrainerSessions = async (req, res) => {
-  try {
-    const trainerId = req.params.trainerId;
-    const sessions = await Session.find({ trainerId });
-    res.status(200).json(sessions);
-  } catch (error) {
-    console.error("❌ Error fetching trainer sessions:", error);
-    res.status(500).json({ message: "Failed to fetch trainer sessions" });
-  }
+// POST /fitboxing/sessions/book
+exports.bookSession = (req, res) => {
+  console.log("➡️ POST /fitboxing/sessions/book");
+  res.status(200).json({ message: 'POST book a session' });
 };
 
-module.exports = {
-  saveTrainerSlots,
-  getTrainerSlots,
-  getAllAvailableSessions,
-  getTrainerSessions, // ✅ export it now!
+// GET /fitboxing/sessions/:sessionId/details
+exports.getSessionDetails = (req, res) => {
+  console.log(`➡️ GET /fitboxing/sessions/${req.params.sessionId}/details`);
+  res.status(200).json({ message: 'GET session details by ID' });
+};
+
+// GET /fitboxing/sessions/user/:userId/bookings
+exports.getUserBookings = (req, res) => {
+  console.log(`➡️ GET /fitboxing/sessions/user/${req.params.userId}/bookings`);
+  res.status(200).json({ message: 'GET all bookings for a user' });
 };
