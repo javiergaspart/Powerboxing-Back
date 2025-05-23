@@ -1,23 +1,25 @@
+// sessionRoutes.js
+
 const express = require('express');
 const router = express.Router();
 const sessionController = require('../controllers/sessionController');
-const Session = require('../models/Session'); // ✅ required for temporary delete route
 
-// ✅ Save trainer availability and create sessions
-router.post('/saveTrainerSlots', sessionController.saveTrainerSlots);
+// ✅ PUBLIC GET route for fetching all available sessions (used in TempHomeScreen)
+router.get('/sessions/available', sessionController.getAllAvailableSessions);
 
-// ✅ Fetch all slots created by this trainer
-router.get('/trainer/:trainerId/slots', sessionController.getTrainerSlots);
+// ✅ Existing GET route for fetching sessions created by a specific trainer
+router.get('/fitboxing/sessions/trainer/:trainerId/slots', sessionController.getTrainerSessions);
 
-// ✅ TEMPORARY: Delete all sessions
-router.delete('/delete-all', async (req, res) => {
-  try {
-    const result = await Session.deleteMany({});
-    res.status(200).json({ message: 'All sessions deleted', deletedCount: result.deletedCount });
-  } catch (err) {
-    console.error('❌ Error deleting sessions:', err);
-    res.status(500).json({ error: err.message });
-  }
-});
+// ✅ Existing POST route for creating a session by trainer
+router.post('/fitboxing/sessions/create', sessionController.createSession);
+
+// ✅ Existing POST route to book a session (used when user books one)
+router.post('/fitboxing/sessions/book', sessionController.bookSession);
+
+// ✅ GET route to fetch session details by ID (optional for frontend)
+router.get('/fitboxing/sessions/:sessionId', sessionController.getSessionDetails);
+
+// ✅ GET all bookings for a user (optional if needed later)
+router.get('/fitboxing/bookings/user/:userId', sessionController.getUserBookings);
 
 module.exports = router;

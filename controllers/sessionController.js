@@ -48,7 +48,7 @@ const saveTrainerSlots = async (req, res) => {
   }
 };
 
-// ✅ Controller to fetch trainer slots (safe version)
+// ✅ Controller to fetch trainer slots
 const getTrainerSlots = async (req, res) => {
   try {
     const trainerId = req.params.trainerId;
@@ -70,7 +70,19 @@ const getTrainerSlots = async (req, res) => {
   }
 };
 
+// ✅ Controller to fetch all available sessions (PUBLIC)
+const getAllAvailableSessions = async (req, res) => {
+  try {
+    const sessions = await Session.find({});
+    res.status(200).json(sessions);
+  } catch (error) {
+    console.error("❌ Error fetching sessions:", error);
+    res.status(500).json({ message: "Failed to fetch sessions" });
+  }
+};
+
 module.exports = {
   saveTrainerSlots,
   getTrainerSlots,
+  getAllAvailableSessions, // ✅ Required for public route
 };
