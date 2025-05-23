@@ -1,4 +1,3 @@
-// controllers/sessionController.js
 const mongoose = require('mongoose');
 const Session = require('../models/Session');
 
@@ -34,7 +33,7 @@ const createSession = async (req, res) => {
   const { slot } = req.body;
   try {
     const newSession = new Session({
-      trainer: trainerId,
+      trainer: new mongoose.Types.ObjectId(trainerId),
       slot,
       participants: [],
       totalSlots: 18,
@@ -100,10 +99,10 @@ const saveTrainerSlots = async (req, res) => {
   }
 
   try {
-    await Session.deleteMany({ trainer: trainerId });
+    await Session.deleteMany({ trainer: new mongoose.Types.ObjectId(trainerId) });
 
     const newSessions = slots.map((slot) => ({
-      trainer: trainerId,
+      trainer: new mongoose.Types.ObjectId(trainerId),
       slot,
       participants: [],
       totalSlots: 18,
