@@ -42,20 +42,24 @@ exports.verifyOtpSignup = async (req, res) => {
       return res.status(400).json({ message: 'OTP verification failed', error: response.data });
     }
 
-    let user = await User.findOne({ phone });
-
-    if (!user) {
-      user = new User({
-        username,
-        phone,
-        joinDate: new Date(),
-        newcomer: true,
-        sessionBalance: 1,
-      });
-      await user.save();
+    // ❌ Reject if user already exists
+    const existingUser = await User.findOne({ phone });
+    if (existingUser) {
+      return res.status(400).json({ message: 'User already signed up with this phone number' });
     }
 
-    return res.status(200).json({ user, token: 'mock_token' });
+    // ✅ Create new user with 'trial' type
+    const newUser = new User({
+      username,
+      phone,
+      joinDate: new Date(),
+      type: 'trial',
+      sessionBalance: 1,
+    });
+
+    await newUser.save();
+
+    return res.status(200).json({ user: newUser, token: 'mock_token' });
   } catch (error) {
     return res.status(500).json({ message: 'Error verifying OTP', error: error.message });
   }
