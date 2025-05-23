@@ -13,7 +13,7 @@ app.use('/fitboxing/auth', authRoutes);
 
 // ✅ Trainer routes
 const trainerRoutes = require('./routes/trainerRoutes');
-app.use('/trainer', trainerRoutes);
+app.use('/fitboxing', trainerRoutes);
 
 // ✅ NEW: Sessions route added (for saveTrainerSlots)
 const sessionRoutes = require('./routes/sessionRoutes');
