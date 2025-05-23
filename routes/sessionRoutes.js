@@ -1,5 +1,4 @@
 // routes/sessionRoutes.js
-
 const express = require('express');
 const router = express.Router();
 const sessionController = require('../controllers/sessionController');
@@ -10,7 +9,8 @@ router.get('/available', sessionController.getAllAvailableSessions);
 // ✅ TRAINER DASHBOARD
 router.get('/trainer/:trainerId/slots', sessionController.getTrainerSessions);
 router.post('/trainer/:trainerId/create', sessionController.createSession);
-router.post('/saveTrainerSlots', sessionController.saveTrainerSlots); // ✅ Added
+router.post('/saveTrainerSlots', sessionController.saveTrainerSlots); // ✅ Overwrites previous
+router.post('/create-multiple', sessionController.createMultipleSessions); // ✅ Appends sessions
 
 // ✅ USER BOOKING
 router.post('/book', sessionController.bookSession);
