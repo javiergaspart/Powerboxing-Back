@@ -80,6 +80,32 @@ const getUserBookings = async (req, res) => {
   }
 };
 
+// ✅ Save trainer slots
+const saveTrainerSlots = async (req, res) => {
+  const { trainerId, slots } = req.body;
+
+  if (!trainerId || !Array.isArray(slots)) {
+    return res.status(400).json({ message: 'Trainer ID and slots array are required.' });
+  }
+
+  try {
+    await Session.deleteMany({ trainer: trainerId });
+
+    const newSessions = slots.map((slot) => ({
+      trainer: trainerId,
+      slot,
+      participants: [],
+    }));
+
+    await Session.insertMany(newSessions);
+
+    res.status(200).json({ message: 'Slots saved successfully.', count: newSessions.length });
+  } catch (error) {
+    console.error('❌ Error saving trainer slots:', error);
+    res.status(500).json({ message: 'Internal server error', error });
+  }
+};
+
 module.exports = {
   getAllAvailableSessions,
   getTrainerSessions,
@@ -87,4 +113,5 @@ module.exports = {
   bookSession,
   getSessionDetails,
   getUserBookings,
+  saveTrainerSlots, // ✅ Exported
 };

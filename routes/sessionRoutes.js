@@ -10,6 +10,7 @@ router.get('/available', sessionController.getAllAvailableSessions);
 // ✅ TRAINER DASHBOARD
 router.get('/trainer/:trainerId/slots', sessionController.getTrainerSessions);
 router.post('/trainer/:trainerId/create', sessionController.createSession);
+router.post('/saveTrainerSlots', sessionController.saveTrainerSlots); // ✅ Added
 
 // ✅ USER BOOKING
 router.post('/book', sessionController.bookSession);
