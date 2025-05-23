@@ -31,6 +31,10 @@ const createSession = async (req, res) => {
       trainer: trainerId,
       slot,
       participants: [],
+      totalSlots: 18,
+      availableSlots: 18,
+      location: 'Hyderabad Studio',
+      date: slot.split(':')[0].replaceAll('.', '-'),
     });
     await newSession.save();
     res.status(201).json(newSession);
@@ -48,6 +52,7 @@ const bookSession = async (req, res) => {
       return res.status(404).json({ error: 'Session not found' });
     }
     session.participants.push(userId);
+    session.availableSlots = Math.max(0, session.availableSlots - 1);
     await session.save();
     res.status(200).json({ message: 'Session booked', session });
   } catch (err) {
@@ -95,6 +100,10 @@ const saveTrainerSlots = async (req, res) => {
       trainer: trainerId,
       slot,
       participants: [],
+      totalSlots: 18, // ✅ Number of punching bag stations
+      availableSlots: 18,
+      location: 'Hyderabad Studio',
+      date: slot.split(':')[0].replaceAll('.', '-'),
     }));
 
     await Session.insertMany(newSessions);
@@ -113,5 +122,5 @@ module.exports = {
   bookSession,
   getSessionDetails,
   getUserBookings,
-  saveTrainerSlots, // ✅ Exported
+  saveTrainerSlots,
 };
