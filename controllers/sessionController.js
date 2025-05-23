@@ -15,9 +15,11 @@ const getAllAvailableSessions = async (req, res) => {
 const getTrainerSessions = async (req, res) => {
   const trainerId = req.params.trainerId;
   try {
-    const sessions = await Session.find({ trainer: trainerId });
+    const sessions = await Session.find({ trainer: trainerId }).sort({ date: 1, slot: 1 });
+    console.log(`✅ Found ${sessions.length} sessions for trainer ${trainerId}`);
     res.status(200).json(sessions);
   } catch (err) {
+    console.error('❌ Failed to fetch trainer sessions:', err);
     res.status(500).json({ error: 'Failed to fetch trainer sessions' });
   }
 };
@@ -100,7 +102,7 @@ const saveTrainerSlots = async (req, res) => {
       trainer: trainerId,
       slot,
       participants: [],
-      totalSlots: 18, // ✅ Number of punching bag stations
+      totalSlots: 18,
       availableSlots: 18,
       location: 'Hyderabad Studio',
       date: slot.split(':')[0].replaceAll('.', '-'),
