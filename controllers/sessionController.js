@@ -1,4 +1,5 @@
 // controllers/sessionController.js
+const mongoose = require('mongoose');
 const Session = require('../models/Session');
 
 // ✅ Get all available sessions for the temp homescreen
@@ -15,7 +16,10 @@ const getAllAvailableSessions = async (req, res) => {
 const getTrainerSessions = async (req, res) => {
   const trainerId = req.params.trainerId;
   try {
-    const sessions = await Session.find({ trainer: trainerId }).sort({ date: 1, slot: 1 });
+    const sessions = await Session.find({
+      trainer: new mongoose.Types.ObjectId(trainerId),
+    }).sort({ date: 1, slot: 1 });
+
     console.log(`✅ Found ${sessions.length} sessions for trainer ${trainerId}`);
     res.status(200).json(sessions);
   } catch (err) {
