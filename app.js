@@ -17,7 +17,7 @@ app.use('/trainer', trainerRoutes);
 
 // ✅ NEW: Sessions route added (for saveTrainerSlots)
 const sessionRoutes = require('./routes/sessionRoutes');
-app.use('/sessions', sessionRoutes);
+app.use('/fitboxing/sessions', sessionRoutes);
 
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('✅ Connected to MongoDB'))

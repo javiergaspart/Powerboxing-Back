@@ -1,37 +1,90 @@
 // controllers/sessionController.js
+const Session = require('../models/Session');
 
-// GET /fitboxing/sessions/available
-exports.getAllAvailableSessions = (req, res) => {
-  console.log("➡️ GET /fitboxing/sessions/available");
-  res.status(200).json({ message: 'GET all available sessions (temp homescreen)' });
+// ✅ Get all available sessions for the temp homescreen
+const getAllAvailableSessions = async (req, res) => {
+  try {
+    const sessions = await Session.find({});
+    res.status(200).json(sessions);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch sessions' });
+  }
 };
 
-// GET /fitboxing/sessions/trainer/:trainerId/slots
-exports.getTrainerSessions = (req, res) => {
-  console.log(`➡️ GET /fitboxing/sessions/trainer/${req.params.trainerId}/slots`);
-  res.status(200).json({ message: 'GET sessions created by a trainer' });
+// ✅ Get sessions created by a specific trainer
+const getTrainerSessions = async (req, res) => {
+  const trainerId = req.params.trainerId;
+  try {
+    const sessions = await Session.find({ trainer: trainerId });
+    res.status(200).json(sessions);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch trainer sessions' });
+  }
 };
 
-// POST /fitboxing/sessions/trainer/:trainerId/create
-exports.createSession = (req, res) => {
-  console.log(`➡️ POST /fitboxing/sessions/trainer/${req.params.trainerId}/create`);
-  res.status(201).json({ message: 'POST create a session by trainer' });
+// ✅ Create a new session by a trainer
+const createSession = async (req, res) => {
+  const trainerId = req.params.trainerId;
+  const { slot } = req.body;
+  try {
+    const newSession = new Session({
+      trainer: trainerId,
+      slot,
+      participants: [],
+    });
+    await newSession.save();
+    res.status(201).json(newSession);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to create session' });
+  }
 };
 
-// POST /fitboxing/sessions/book
-exports.bookSession = (req, res) => {
-  console.log("➡️ POST /fitboxing/sessions/book");
-  res.status(200).json({ message: 'POST book a session' });
+// ✅ Book a session
+const bookSession = async (req, res) => {
+  const { sessionId, userId } = req.body;
+  try {
+    const session = await Session.findById(sessionId);
+    if (!session) {
+      return res.status(404).json({ error: 'Session not found' });
+    }
+    session.participants.push(userId);
+    await session.save();
+    res.status(200).json({ message: 'Session booked', session });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to book session' });
+  }
 };
 
-// GET /fitboxing/sessions/:sessionId/details
-exports.getSessionDetails = (req, res) => {
-  console.log(`➡️ GET /fitboxing/sessions/${req.params.sessionId}/details`);
-  res.status(200).json({ message: 'GET session details by ID' });
+// ✅ Get session details by session ID
+const getSessionDetails = async (req, res) => {
+  const { sessionId } = req.params;
+  try {
+    const session = await Session.findById(sessionId);
+    if (!session) {
+      return res.status(404).json({ error: 'Session not found' });
+    }
+    res.status(200).json(session);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch session details' });
+  }
 };
 
-// GET /fitboxing/sessions/user/:userId/bookings
-exports.getUserBookings = (req, res) => {
-  console.log(`➡️ GET /fitboxing/sessions/user/${req.params.userId}/bookings`);
-  res.status(200).json({ message: 'GET all bookings for a user' });
+// ✅ Get all bookings for a user
+const getUserBookings = async (req, res) => {
+  const userId = req.params.userId;
+  try {
+    const sessions = await Session.find({ participants: userId });
+    res.status(200).json(sessions);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch user bookings' });
+  }
+};
+
+module.exports = {
+  getAllAvailableSessions,
+  getTrainerSessions,
+  createSession,
+  bookSession,
+  getSessionDetails,
+  getUserBookings,
 };
