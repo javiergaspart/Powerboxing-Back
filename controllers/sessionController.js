@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const Session = require('../models/Session');
-const User = require('../models/User'); // ✅ Added
+const User = require('../models/User');
 
 // ✅ Get all available sessions for the temp homescreen
 const getAllAvailableSessions = async (req, res) => {
@@ -20,10 +20,8 @@ const getTrainerSessions = async (req, res) => {
       trainer: new mongoose.Types.ObjectId(trainerId),
     }).sort({ date: 1, slot: 1 });
 
-    console.log(`✅ Found ${sessions.length} sessions for trainer ${trainerId}`);
     res.status(200).json(sessions);
   } catch (err) {
-    console.error('❌ Failed to fetch trainer sessions:', err);
     res.status(500).json({ error: 'Failed to fetch trainer sessions' });
   }
 };
@@ -49,25 +47,32 @@ const createSession = async (req, res) => {
   }
 };
 
-// ✅ Book a session with balance decrement
+// ✅ BOOK A SESSION with logging and sessionBalance update
 const bookSession = async (req, res) => {
   const { sessionId, userId } = req.body;
+
   try {
+    console.log('📥 Booking request:', { sessionId, userId });
+
     const session = await Session.findById(sessionId);
     if (!session) {
+      console.error('❌ Session not found:', sessionId);
       return res.status(404).json({ error: 'Session not found' });
     }
 
     const user = await User.findById(userId);
     if (!user) {
+      console.error('❌ User not found:', userId);
       return res.status(404).json({ error: 'User not found' });
     }
 
     if (user.sessionBalance <= 0) {
+      console.warn('❌ Insufficient balance:', user.username);
       return res.status(400).json({ error: 'Insufficient session balance' });
     }
 
     if (session.participants.includes(userId)) {
+      console.warn('❌ Duplicate booking attempt:', userId);
       return res.status(400).json({ error: 'User already booked this session' });
     }
 
@@ -78,14 +83,17 @@ const bookSession = async (req, res) => {
     user.sessionBalance -= 1;
     await user.save();
 
+    console.log(`✅ Booking confirmed for ${user.username} | New balance: ${user.sessionBalance}`);
+
     res.status(200).json({ message: 'Session booked', session });
   } catch (err) {
-    console.error('❌ Error booking session:', err);
-    res.status(500).json({ error: 'Failed to book session' });
+    console.error('❌ Booking failed:', err.message);
+    console.error(err.stack);
+    res.status(500).json({ error: 'Booking failed', details: err.message });
   }
 };
 
-// ✅ Get session details by session ID
+// ✅ Get session details by ID
 const getSessionDetails = async (req, res) => {
   const { sessionId } = req.params;
   try {
@@ -110,7 +118,7 @@ const getUserBookings = async (req, res) => {
   }
 };
 
-// ✅ Save trainer slots (overwrite mode)
+// ✅ Overwrite mode — Save trainer slots
 const saveTrainerSlots = async (req, res) => {
   const { trainerId, slots } = req.body;
 
@@ -135,12 +143,11 @@ const saveTrainerSlots = async (req, res) => {
 
     res.status(200).json({ message: 'Slots saved successfully.', count: newSessions.length });
   } catch (error) {
-    console.error('❌ Error saving trainer slots:', error);
     res.status(500).json({ message: 'Internal server error', error });
   }
 };
 
-// ✅ Merge-mode session creation
+// ✅ Merge-mode: Create sessions without duplicates
 const createMultipleSessions = async (req, res) => {
   const { trainerId, slots } = req.body;
 
@@ -173,7 +180,6 @@ const createMultipleSessions = async (req, res) => {
     await Session.bulkWrite(bulkOps);
     res.status(200).json({ message: 'Sessions created/merged successfully' });
   } catch (err) {
-    console.error('❌ createMultipleSessions error:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
