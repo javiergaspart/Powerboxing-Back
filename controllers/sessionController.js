@@ -2,7 +2,6 @@ const mongoose = require('mongoose');
 const Session = require('../models/Session');
 const User = require('../models/User');
 
-// ✅ Get all available sessions for the temp homescreen
 const getAllAvailableSessions = async (req, res) => {
   try {
     const sessions = await Session.find({});
@@ -12,7 +11,6 @@ const getAllAvailableSessions = async (req, res) => {
   }
 };
 
-// ✅ Get sessions created by a specific trainer
 const getTrainerSessions = async (req, res) => {
   const trainerId = req.params.trainerId;
   try {
@@ -26,7 +24,6 @@ const getTrainerSessions = async (req, res) => {
   }
 };
 
-// ✅ Create a new session by a trainer
 const createSession = async (req, res) => {
   const trainerId = req.params.trainerId;
   const { slot } = req.body;
@@ -47,7 +44,7 @@ const createSession = async (req, res) => {
   }
 };
 
-// ✅ BOOK A SESSION with logging and sessionBalance update
+// ✅ Final BOOK SESSION with live logging + exec()
 const bookSession = async (req, res) => {
   const { sessionId, userId } = req.body;
 
@@ -60,11 +57,13 @@ const bookSession = async (req, res) => {
       return res.status(404).json({ error: 'Session not found' });
     }
 
-    const user = await User.findById(userId);
+    const user = await User.findById(userId).exec(); // ✅ fresh instance
     if (!user) {
       console.error('❌ User not found:', userId);
       return res.status(404).json({ error: 'User not found' });
     }
+
+    console.log(`🧾 Live sessionBalance from DB: ${user.sessionBalance}`);
 
     if (user.sessionBalance <= 0) {
       console.warn('❌ Insufficient balance:', user.username);
@@ -93,7 +92,6 @@ const bookSession = async (req, res) => {
   }
 };
 
-// ✅ Get session details by ID
 const getSessionDetails = async (req, res) => {
   const { sessionId } = req.params;
   try {
@@ -107,7 +105,6 @@ const getSessionDetails = async (req, res) => {
   }
 };
 
-// ✅ Get all bookings for a user
 const getUserBookings = async (req, res) => {
   const userId = req.params.userId;
   try {
@@ -118,7 +115,6 @@ const getUserBookings = async (req, res) => {
   }
 };
 
-// ✅ Overwrite mode — Save trainer slots
 const saveTrainerSlots = async (req, res) => {
   const { trainerId, slots } = req.body;
 
@@ -147,7 +143,6 @@ const saveTrainerSlots = async (req, res) => {
   }
 };
 
-// ✅ Merge-mode: Create sessions without duplicates
 const createMultipleSessions = async (req, res) => {
   const { trainerId, slots } = req.body;
 
