@@ -11,6 +11,18 @@ const getAllAvailableSessions = async (req, res) => {
   }
 };
 
+// ✅ NEW: Get sessions for a specific date (used by calendar)
+const getSessionsByDate = async (req, res) => {
+  const { date } = req.params;
+  try {
+    const sessions = await Session.find({ slot: { $regex: `^${date}` } });
+    res.status(200).json(sessions);
+  } catch (err) {
+    console.error('Error fetching sessions by date:', err);
+    res.status(500).json({ error: 'Failed to fetch sessions for date' });
+  }
+};
+
 const getTrainerSessions = async (req, res) => {
   const trainerId = req.params.trainerId;
   try {
@@ -44,7 +56,6 @@ const createSession = async (req, res) => {
   }
 };
 
-// ✅ Final BOOK SESSION with live logging + exec()
 const bookSession = async (req, res) => {
   const { sessionId, userId } = req.body;
 
@@ -57,7 +68,7 @@ const bookSession = async (req, res) => {
       return res.status(404).json({ error: 'Session not found' });
     }
 
-    const user = await User.findById(userId).exec(); // ✅ fresh instance
+    const user = await User.findById(userId).exec();
     if (!user) {
       console.error('❌ User not found:', userId);
       return res.status(404).json({ error: 'User not found' });
@@ -181,6 +192,7 @@ const createMultipleSessions = async (req, res) => {
 
 module.exports = {
   getAllAvailableSessions,
+  getSessionsByDate, // ✅ added export
   getTrainerSessions,
   createSession,
   bookSession,
