@@ -1,27 +1,26 @@
-// routes/sessionRoutes.js
 const express = require('express');
 const router = express.Router();
 const sessionController = require('../controllers/sessionController');
+const Session = require('../models/Session'); // ✅ required for temporary delete route
 
-// ✅ TEMP HOMESCREEN
-router.get('/available', sessionController.getAllAvailableSessions);
+// ✅ Save trainer availability and create sessions
+router.post('/saveTrainerSlots', sessionController.saveTrainerSlots);
 
-// ✅ NEW: GET sessions by date for calendar
-router.get('/date/:date', sessionController.getSessionsByDate); // <-- ✅ this was missing
+// ✅ Fetch all slots created by this trainer
+router.get('/trainer/:trainerId/slots', sessionController.getTrainerSlots);
 
-// ✅ TRAINER DASHBOARD
-router.get('/trainer/:trainerId/slots', sessionController.getTrainerSessions);
-router.post('/trainer/:trainerId/create', sessionController.createSession);
-router.post('/saveTrainerSlots', sessionController.saveTrainerSlots); // ✅ Overwrites previous
-router.post('/create-multiple', sessionController.createMultipleSessions); // ✅ Appends sessions
+// ✅ Assign stations to participants for a session
+router.post('/assign-stations', sessionController.assignStations);
 
-// ✅ USER BOOKING
-router.post('/book', sessionController.bookSession);
-
-// ✅ SESSION DETAILS
-router.get('/:sessionId/details', sessionController.getSessionDetails);
-
-// ✅ USER BOOKINGS
-router.get('/user/:userId/bookings', sessionController.getUserBookings);
+// ✅ TEMPORARY: Delete all sessions
+router.delete('/delete-all', async (req, res) => {
+  try {
+    const result = await Session.deleteMany({});
+    res.status(200).json({ message: 'All sessions deleted', deletedCount: result.deletedCount });
+  } catch (err) {
+    console.error('❌ Error deleting sessions:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
 
 module.exports = router;

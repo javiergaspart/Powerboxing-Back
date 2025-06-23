@@ -24,15 +24,17 @@ const getSessionsByDate = async (req, res) => {
 };
 
 const getTrainerSessions = async (req, res) => {
-  const trainerId = req.params.trainerId;
+  const trainerId = req.query.trainerId;
   try {
     const sessions = await Session.find({
       trainer: new mongoose.Types.ObjectId(trainerId),
-    }).sort({ date: 1, slot: 1 });
+    })
+      .populate('participants', 'username') // ✅ populate usernames
+      .sort({ date: 1, slot: 1 });
 
     res.status(200).json(sessions);
   } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch trainer sessions' });
+    res.status(500).json({ error: 'Failed to fetch sessions' });
   }
 };
 
@@ -134,9 +136,14 @@ const saveTrainerSlots = async (req, res) => {
   }
 
   try {
-    await Session.deleteMany({ trainer: new mongoose.Types.ObjectId(trainerId) });
+    // 1. Get already saved slots for this trainer
+    const existingSlots = await Session.find({ trainer: new mongoose.Types.ObjectId(trainerId) }).distinct('slot');
 
-    const newSessions = slots.map((slot) => ({
+    // 2. Filter only new slots that are NOT already saved
+    const newSlots = slots.filter(slot => !existingSlots.includes(slot));
+
+    // 3. Create session entries for new slots
+    const newSessions = newSlots.map(slot => ({
       trainer: new mongoose.Types.ObjectId(trainerId),
       slot,
       participants: [],
@@ -146,10 +153,14 @@ const saveTrainerSlots = async (req, res) => {
       date: slot.split(':')[0].replaceAll('.', '-'),
     }));
 
-    await Session.insertMany(newSessions);
+    // 4. Insert only new sessions (preserve old ones)
+    if (newSessions.length > 0) {
+      await Session.insertMany(newSessions);
+    }
 
     res.status(200).json({ message: 'Slots saved successfully.', count: newSessions.length });
   } catch (error) {
+    console.error('❌ Error in saveTrainerSlots:', error.message);
     res.status(500).json({ message: 'Internal server error', error });
   }
 };
@@ -189,6 +200,37 @@ const createMultipleSessions = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+const getTrainerSlots = async (req, res) => {
+  const { trainerId } = req.params;
+
+  try {
+    const sessions = await Session.find({ trainer: new mongoose.Types.ObjectId(trainerId) }).select('slot');
+    const slots = sessions.map(session => session.slot);
+    res.status(200).json(slots);
+  } catch (err) {
+    console.error('❌ Error in getTrainerSlots:', err.message);
+    res.status(500).json({ error: 'Failed to fetch trainer slots' });
+  }
+};
+const assignStations = async (req, res) => {
+  const { sessionId, assignments } = req.body;
+
+  try {
+    const session = await Session.findById(sessionId);
+    if (!session) {
+      return res.status(404).json({ error: 'Session not found' });
+    }
+
+    // Replace current participants with new array that includes station numbers
+    session.participants = assignments;
+    await session.save();
+
+    res.status(200).json({ message: 'Stations assigned successfully', session });
+  } catch (err) {
+    console.error('❌ Error assigning stations:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
 
 module.exports = {
   getAllAvailableSessions,
@@ -199,5 +241,7 @@ module.exports = {
   getSessionDetails,
   getUserBookings,
   saveTrainerSlots,
-  createMultipleSessions
+  createMultipleSessions,
+  getTrainerSlots,
+  assignStations,
 };

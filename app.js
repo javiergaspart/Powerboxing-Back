@@ -17,7 +17,12 @@ app.use('/fitboxing', trainerRoutes);
 
 // ✅ NEW: Sessions route added (for saveTrainerSlots)
 const sessionRoutes = require('./routes/sessionRoutes');
-app.use('/fitboxing/sessions', sessionRoutes);
+app.use('/fitboxing', sessionRoutes); // ✅ Corrected: Now handles /fitboxing/book too
+
+// ✅ NEW: Users
+const userRoutes = require('./routes/userRoutes');
+app.use('/fitboxing', userRoutes);
+app.use('/fitboxing/users', userRoutes);
 
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('✅ Connected to MongoDB'))

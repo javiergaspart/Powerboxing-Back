@@ -1,8 +1,5 @@
 // src/controllers/userController.js
 
-const mongoose = require('mongoose');
-const User = require('../models/User');  // Ajusta el path si el modelo está en otra carpeta
-
 const userService = require('../services/userService');
 
 const multer = require('multer');
@@ -46,24 +43,10 @@ const upload = multer({
 
 const getUserById = async (req, res) => {
   try {
-    console.debug('Entrada getUserById');
-
-    const userId = req.params.id;
-
-    if (!mongoose.Types.ObjectId.isValid(userId)) {
-      return res.status(400).json({ message: 'Invalid user ID' });
-    }
-
-    const user = await User.findById(userId);
-
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-
+    const user = await userService.getUserById(req.params.id);
     res.status(200).json(user);
-  } catch (err) {
-    console.error('❌ Error in getUserById:', err.message);
-    res.status(500).json({ message: 'Internal server error' });
+  } catch (error) {
+    res.status(404).json({ error: 'User not found' });
   }
 };
 
