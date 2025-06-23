@@ -8,20 +8,23 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+console.log('✅ Starting app.js, initializing routes...');
+
 const authRoutes = require('./routes/authRoutes');
 app.use('/fitboxing/auth', authRoutes);
+console.log('✅ authRoutes loaded');
 
-// ✅ Trainer routes
 const trainerRoutes = require('./routes/trainerRoutes');
 app.use('/fitboxing', trainerRoutes);
+console.log('✅ trainerRoutes loaded');
 
-// ✅ NEW: Sessions route added (for saveTrainerSlots)
 const sessionRoutes = require('./routes/sessionRoutes');
-app.use('/fitboxing', sessionRoutes); // ✅ Corrected: Now handles /fitboxing/book too
+app.use('/fitboxing', sessionRoutes);
+console.log('✅ sessionRoutes loaded');
 
-// ✅ NEW: Users
 const userRoutes = require('./routes/userRoutes');
 app.use('/fitboxing/users', userRoutes);
+console.log('✅ userRoutes loaded');
 
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('✅ Connected to MongoDB'))
