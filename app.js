@@ -21,7 +21,6 @@ app.use('/fitboxing', sessionRoutes); // ✅ Corrected: Now handles /fitboxing/b
 
 // ✅ NEW: Users
 const userRoutes = require('./routes/userRoutes');
-app.use('/fitboxing', userRoutes);
 app.use('/fitboxing/users', userRoutes);
 
 mongoose.connect(process.env.MONGODB_URI)
