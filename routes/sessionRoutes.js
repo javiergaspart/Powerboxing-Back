@@ -12,6 +12,9 @@ router.get('/trainer/:trainerId/slots', sessionController.getTrainerSlots);
 // ✅ Assign stations to participants for a session
 router.post('/assign-stations', sessionController.assignStations);
 
+// ✅ Fetch all sessions for a trainer with populated participant usernames
+router.get('/sessions', sessionController.getTrainerSessions);
+
 // ✅ TEMPORARY: Delete all sessions
 router.delete('/delete-all', async (req, res) => {
   try {
